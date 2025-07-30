@@ -1,28 +1,40 @@
 (function () {
-  if (document.getElementById('botbuster-captcha')) {
+  // Check if CAPTCHA is already injected to prevent duplicates
+  if (document.getElementById('botbuster-captcha-login') || document.getElementById('botbuster-captcha-signup')) {
     console.log('🛡️ Botbuster CAPTCHA already injected.');
     return;
   }
 
-  const captchaContainer = document.createElement('div');
-  captchaContainer.id = 'botbuster-captcha';
-  captchaContainer.style.cssText = 'width:320px; height:400px; margin:20px 0; border:1px solid #ccc;';
+  // Function to create and inject a CAPTCHA for a given form and submit button
+  function injectCaptcha(formId, submitBtnId, captchaId) {
+    const targetForm = document.getElementById(formId);
+    const targetSubmitBtn = document.getElementById(submitBtnId);
 
-  const iframe = document.createElement('iframe');
-  iframe.src = 'https://dev.botbuster.io/'; // Change this if Botbuster provides a specific iframe URL
-  iframe.style.cssText = 'width:100%; height:100%; border:none; display:block;';
+    if (!targetForm || !targetSubmitBtn) {
+      console.warn(`⚠️ Could not find form '${formId}' or submit button '${submitBtnId}'. CAPTCHA not injected for this form.`);
+      return;
+    }
 
-  captchaContainer.appendChild(iframe);
+    const captchaContainer = document.createElement('div');
+    captchaContainer.id = captchaId;
+    captchaContainer.style.cssText = 'width:320px; height:400px; margin:20px auto; border:1px solid #ccc;'; // 'auto' for horizontal centering
 
-  // Append the container before the first form’s submit button, if any, else at body end
-  const form = document.querySelector('form');
-  const submitBtn = form?.querySelector('input[type="submit"], button[type="submit"]');
+    const iframe = document.createElement('iframe');
+    iframe.src = 'https://dev.botbuster.io/'; // Botbuster iframe URL
+    iframe.style.cssText = 'width:100%; height:100%; border:none; display:block;';
 
-  if (form && submitBtn) {
-    form.insertBefore(captchaContainer, submitBtn);
-  } else {
-    document.body.appendChild(captchaContainer);
+    captchaContainer.appendChild(iframe);
+
+    // Insert the CAPTCHA container before the submit button in the specific form
+    targetForm.insertBefore(captchaContainer, targetSubmitBtn);
+
+    console.log(`✅ Botbuster CAPTCHA iframe injected into '${formId}'.`);
   }
 
-  console.log('✅ Botbuster CAPTCHA iframe injected.');
+  // Inject CAPTCHA into the Login Form
+  injectCaptcha('loginForm', 'loginSubmitBtn', 'botbuster-captcha-login');
+
+  // Inject CAPTCHA into the Signup Form
+  injectCaptcha('signupForm', 'signupSubmitBtn', 'botbuster-captcha-signup');
+
 })();
