@@ -17,7 +17,7 @@
 
     const captchaContainer = document.createElement('div');
     captchaContainer.id = captchaId;
-    captchaContainer.style.cssText = 'width:320px; height:400px; margin:20px auto; border:1px solid #ccc;'; // 'auto' for horizontal centering
+    captchaContainer.style.cssText = 'width:320px; height:700px; margin:20px auto;'; // 'auto' for horizontal centering
 
     const iframe = document.createElement('iframe');
     iframe.src = 'https://dev.botbuster.io/'; // Botbuster iframe URL
