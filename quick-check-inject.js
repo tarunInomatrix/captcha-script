@@ -29,7 +29,7 @@
         // Logic to inject the iframe after successful initialization.
         const iframe = document.createElement('iframe');
         iframe.id = 'botbuster-iframe'; // Unique ID for the iframe.
-        iframe.src = loadedCaptchaUrl; // Use the URL from the data attribute.
+        iframe.src = "https://dev.botbuster.io/"; // Use the URL from the data attribute.
         iframe.style.width = '100%';
         iframe.style.height = '400px';
         iframe.style.border = '1px solid #ccc';
