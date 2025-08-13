@@ -31,7 +31,7 @@
         iframe.id = 'botbuster-iframe'; // Unique ID for the iframe.
         iframe.src = "https://dev.botbuster.io/"; // Use the URL from the data attribute.
         iframe.style.width = '100%';
-        iframe.style.height = '400px';
+        iframe.style.height = '700px';
         iframe.style.border = '1px solid #ccc';
         iframe.style.borderRadius = '8px';
         iframe.style.boxShadow = '0 4px 6px rgba(0, 0, 0, 0.1)';
