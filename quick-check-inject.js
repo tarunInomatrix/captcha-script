@@ -16,8 +16,8 @@
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          apiKey: apiSecret, // Assuming apiSecret is the API key
-          loadedCaptchaUrl: window.location.href, // Get the current page's URL
+          apiKey: apiSecret, 
+          loadedCaptchaUrl: window.location.href,
           email: userEmail,
         }),
       });
@@ -32,7 +32,9 @@
         injectCaptcha('loginForm', 'loginSubmitBtn', 'botbuster-captcha-login');
         injectCaptcha('signupForm', 'signupSubmitBtn', 'botbuster-captcha-signup');
       } else {
-        console.warn('⚠️ Botbuster SDK initialization failed:', data.message);
+        // Use the provided message, or a default message if it's missing
+        const errorMessage = data.message || 'Unknown error during initialization.';
+        console.warn(`⚠️ Botbuster SDK initialization failed: ${errorMessage}`);
       }
     } catch (error) {
       console.error('❌ An error occurred during Botbuster SDK initialization:', error);
@@ -60,7 +62,7 @@
     captchaContainer.appendChild(iframe);
     targetForm.insertBefore(captchaContainer, targetSubmitBtn);
 
-    console.log(`✅ Botbuster CAPTCHA injected into '${formId}'.`);
+    console.log(`✅ Botbuster CAPTCHA iframe injected into '${formId}'.`);
   }
 
   // Call the new init function to start the process
