@@ -57,6 +57,7 @@
       } else {
         const errorMessage = data.message || 'Unknown error during initialization.';
         console.warn(`⚠️ Botbuster SDK initialization failed: ${errorMessage}`);
+        console.log(data,"API response", "Status :", data.statusCode)
       }
     } catch (error) {
       console.error('❌ An error occurred during Botbuster SDK initialization:', error);
