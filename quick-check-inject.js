@@ -40,6 +40,14 @@
         iframe.style.borderRadius = '8px';
         iframe.style.boxShadow = '0 4px 6px rgba(0, 0, 0, 0.1)';
         iframe.style.marginTop = '20px';
+
+        iframe.onload = () => {          
+          const data = {
+            message: 'Hello from the parent!',
+            timestamp: Date.now()
+          };          
+          iframe.contentWindow.postMessage(data, 'https://example.com'); 
+        };
         
         // Find the container to inject the iframe into.
         let container = document.getElementById(parentContainerId);
