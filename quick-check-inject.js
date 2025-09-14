@@ -27,7 +27,7 @@
 
       const data = await response.json();
 
-      if (data.statusCode === 200) {
+      if (data.code === "CONFIG_LOADED") {
         console.log('✅ Botbuster SDK initialized successfully.');
         
         // Logic to inject the iframe after successful initialization.
