@@ -5,8 +5,10 @@
   const apiKey = currentScript.getAttribute('data-api-key');
   const loadedCaptchaUrl = currentScript.getAttribute('data-loaded-captcha-url');
   const userEmail = currentScript.getAttribute('data-email');
-  const parentContainerId = 'botbuster-container'; // ID of a container element for the iframe.
-
+  const parentContainerId = 'botbuster-container'; 
+  const loadedActionId = currentScript.getAttribute('data-action-id') || null;
+  const loadedEmailElement = currentScript.getAttribute('data-email-element') || null;
+  
   async function init() {
     try {
       const response = await fetch('https://5znp405k6i.execute-api.eu-north-1.amazonaws.com/dev/initSDK', {
@@ -18,6 +20,8 @@
           apiKey: apiKey,
           loadedCaptchaUrl: loadedCaptchaUrl,
           email: userEmail,
+          actionId: loadedActionId,
+          emailElement: loadedEmailElement 
         }),
       });
 
