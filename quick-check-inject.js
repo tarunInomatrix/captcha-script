@@ -33,7 +33,7 @@
         // Logic to inject the iframe after successful initialization.
         const iframe = document.createElement('iframe');
         iframe.id = 'botbuster-iframe'; // Unique ID for the iframe.
-        iframe.src = "https://dev.botbuster.io/"; // Use the URL from the data attribute.
+        iframe.src = `https://dev.botbuster.io/${data.captcha_uid}`; // Use the URL from the data attribute.
         iframe.style.width = '100%';
         iframe.style.height = '700px';
         iframe.style.border = '1px solid #ccc';
@@ -41,13 +41,7 @@
         iframe.style.boxShadow = '0 4px 6px rgba(0, 0, 0, 0.1)';
         iframe.style.marginTop = '20px';
 
-        iframe.onload = () => {          
-          const data = {
-            message: 'Hello from the parent!',
-            timestamp: Date.now()
-          };          
-          iframe.contentWindow.postMessage(data, 'https://example.com'); 
-        };
+      
         
         // Find the container to inject the iframe into.
         let container = document.getElementById(parentContainerId);
