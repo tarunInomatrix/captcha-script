@@ -22,7 +22,7 @@
           email: userEmail,
           actionId: loadedActionId,
           emailElement: loadedEmailElement,
-          domainURL: loadedWebsiteUrl
+         
         }),
       });
 
