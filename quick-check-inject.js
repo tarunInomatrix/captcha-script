@@ -18,7 +18,7 @@
         },
         body: JSON.stringify({
           apiKey: apiKey,
-          loadedCaptchaUrl: loadedCaptchaUrl,
+          loadedCaptchaUrl: loadedWebsiteUrl,
           email: userEmail,
           actionId: loadedActionId,
           emailElement: loadedEmailElement,
@@ -40,8 +40,10 @@
         iframe.style.border = '1px solid #ccc';
         iframe.style.borderRadius = '8px';
         iframe.style.boxShadow = '0 4px 6px rgba(0, 0, 0, 0.1)';
-        iframe.style.marginTop = '20px';
-
+        iframe.style.marginTop = '20px';        
+        iframe.onload = () => {
+          iframe.contentWindow.localStorage.setItem("url", loadedWebsiteUrl);
+        };
       
         
         // Find the container to inject the iframe into.
