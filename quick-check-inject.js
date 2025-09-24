@@ -21,7 +21,8 @@
           loadedCaptchaUrl: loadedCaptchaUrl,
           email: userEmail,
           actionId: loadedActionId,
-          emailElement: loadedEmailElement 
+          emailElement: loadedEmailElement,
+          domainURL: loadedWebsiteUrl
         }),
       });
 
