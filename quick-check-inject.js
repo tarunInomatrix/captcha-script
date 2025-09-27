@@ -9,6 +9,9 @@
   const loadedActionId = currentScript.getAttribute('data-action-id') || null;
   const loadedEmailElement = currentScript.getAttribute('data-email-element') || null;
   const loadedWebsiteUrl = currentScript.getAttribute('data-web-url') || null;
+
+  console.log('loadedWebsiteUrl', loadedWebsiteUrl);
+  
   async function init() {
     try {
       const response = await fetch('https://5znp405k6i.execute-api.eu-north-1.amazonaws.com/dev/initSDK', {
