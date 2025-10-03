@@ -1,80 +1,81 @@
 (function () {
-  const currentScript = document.currentScript;
-  
-  // Read the data attributes from the script tag.
-  const apiKey = currentScript.getAttribute('data-api-key');
-  const loadedCaptchaUrl = currentScript.getAttribute('data-loaded-captcha-url');
-  const userEmail = currentScript.getAttribute('data-email');
-  const parentContainerId = 'botbuster-container'; 
-  const loadedActionId = currentScript.getAttribute('data-action-id') || null;
-  const loadedEmailElement = currentScript.getAttribute('data-email-element') || null;
-  const loadedWebsiteUrl = currentScript.getAttribute('data-web-url') || null;
+  const currentScript = document.currentScript;
+  
+  // Read the data attributes from the script tag.
+  const apiKey = currentScript.getAttribute('data-api-key');
+  const userEmail = currentScript.getAttribute('data-email');
+  const parentContainerId = 'botbuster-container'; 
+  const loadedActionId = currentScript.getAttribute('data-action-id') || null;
+  const loadedEmailElement = currentScript.getAttribute('data-email-element') || null;
+  const loadedWebsiteUrl = currentScript.getAttribute('data-web-url') || null;
 
-  console.log('loadedWebsiteUrl', loadedWebsiteUrl);
-  
-  async function init() {
-    try {
-      const response = await fetch('https://5znp405k6i.execute-api.eu-north-1.amazonaws.com/dev/initSDK', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          apiKey: apiKey,
-          loadedCaptchaUrl: loadedWebsiteUrl,
-          email: userEmail,
-          actionId: loadedActionId,
-          emailElement: loadedEmailElement,
-         
-        }),
-      });
+  console.log('loadedWebsiteUrl', loadedWebsiteUrl);
+  
+  // --- INJECT IFRAME BEFORE API CALL (Step 1) ---
+  const iframe = document.createElement('iframe');
+  iframe.id = 'botbuster-iframe';
+  iframe.src = 'about:blank'; // Placeholder URL
+  iframe.style.width = '100%';
+  iframe.style.height = '700px';
+  iframe.style.border = '1px solid #ccc';
+  iframe.style.borderRadius = '8px';
+  iframe.style.boxShadow = '0 4px 6px rgba(0, 0, 0, 0.1)';
+  iframe.style.marginTop = '20px';
+  
+  let container = document.getElementById(parentContainerId);
+  if (!container) {
+    container = document.createElement('div');
+    container.id = parentContainerId;
+    document.body.appendChild(container);
+    console.log(`Created container #${parentContainerId} for the iframe.`);
+  }
 
-      const data = await response.json();
+  container.appendChild(iframe);
+  console.log('Temporary iframe injected successfully.');
+  
+  // --- Start the API call after the temporary iframe is in place ---
+  async function init() {
+    try {
+      const response = await fetch('https://5znp405k6i.execute-api.eu-north-1.amazonaws.com/dev/initSDK', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          apiKey: apiKey,
+          loadedCaptchaUrl: loadedWebsiteUrl,
+          email: userEmail,
+          actionId: loadedActionId,
+          emailElement: loadedEmailElement,
+        }),
+      });
 
-      if (data.code === "CONFIG_LOADED") {
-        console.log('✅ Botbuster SDK initialized successfully.');
-        
-        // Logic to inject the iframe after successful initialization.
-        const iframe = document.createElement('iframe');
-        iframe.id = 'botbuster-iframe'; // Unique ID for the iframe.
-        iframe.src = `https://dev.botbuster.io/${data.captcha_uid}`; // Use the URL from the data attribute.
-        iframe.style.width = '100%';
-        iframe.style.height = '700px';
-        iframe.style.border = '1px solid #ccc';
-        iframe.style.borderRadius = '8px';
-        iframe.style.boxShadow = '0 4px 6px rgba(0, 0, 0, 0.1)';
-        iframe.style.marginTop = '20px';        
-        iframe.addEventListener("load", () => {
-        iframe.contentWindow.postMessage(
-          { type: "BOTBUSTER_INIT", url: loadedWebsiteUrl },
-              "https://dev.botbuster.io" // must match iframe origin
-          );
-        });
-      
-        
-        // Find the container to inject the iframe into.
-        let container = document.getElementById(parentContainerId);
-        if (!container) {
-            // Create the container if it doesn't exist.
-            container = document.createElement('div');
-            container.id = parentContainerId;
-            document.body.appendChild(container);
-            console.log(`Created container #${parentContainerId} for the iframe.`);
-        }
+      const data = await response.json();
 
-        container.appendChild(iframe);
-        console.log('Iframe injected successfully.');
+      if (data.code === "CONFIG_LOADED") {
+        console.log('✅ Botbuster SDK initialized successfully.');
+        
+        // --- INJECT IFRAME AFTER API CALL (Step 2) ---
+        // Update the src of the existing iframe with the real URL
+        iframe.src = `https://dev.botbuster.io/${data.captcha_uid}`;
+        
+        // Post-message logic
+        iframe.addEventListener("load", () => {
+          iframe.contentWindow.postMessage(
+            { type: "BOTBUSTER_INIT", url: loadedWebsiteUrl },
+            "https://dev.botbuster.io"
+          );
+        });
+        console.log('Iframe src updated to the real CAPTCHA URL.');
+      } else {
+        const errorMessage = data.message || 'Unknown error during initialization.';
+        console.warn(`⚠️ Botbuster SDK initialization failed: ${errorMessage}`);
+        console.log(data,"API response", "Status :", data.statusCode);
+      }
+    } catch (error) {
+      console.error('❌ An error occurred during Botbuster SDK initialization:', error);
+    }
+  }
 
-      } else {
-        const errorMessage = data.message || 'Unknown error during initialization.';
-        console.warn(`⚠️ Botbuster SDK initialization failed: ${errorMessage}`);
-        console.log(data,"API response", "Status :", data.statusCode)
-      }
-    } catch (error) {
-      console.error('❌ An error occurred during Botbuster SDK initialization:', error);
-    }
-  }
-
-  // Call the init function to start the process.
-  init();
+  init();
 })();
