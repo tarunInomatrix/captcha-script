@@ -32,6 +32,31 @@
 
   container.appendChild(iframe);
   console.log('Temporary iframe injected successfully.');
+
+  function normalizeToWWW(input) {
+  if (!input || typeof input !== 'string') return null;
+
+  // Ensure URL() can parse it — if there is no scheme, prepend a temporary one
+  let working = input.trim();
+  if (!/^[a-zA-Z][a-zA-Z0-9+.-]*:\/\//.test(working)) {
+    working = 'https://' + working;
+  }
+
+  try {
+    const url = new URL(working);
+    let host = url.hostname; // no port, no path
+    if (!host.startsWith('www.')) {
+      host = 'www.' + host;
+    }
+    return host + '/';
+  } catch (e) {
+    // If URL parsing fails, try a simpler fallback: strip protocol manually
+    // and remove path/query/hash
+    working = working.replace(/^[a-zA-Z][a-zA-Z0-9+.-]*:\/\//, '');
+    const host = working.split(/[\/?#]/, 1)[0].split(':', 1)[0];
+    return (host.startsWith('www.') ? host : 'www.' + host) + '/';
+  }
+}
   
   // --- Start the API call after the temporary iframe is in place ---
   async function init() {
@@ -57,7 +82,7 @@
         
         // --- INJECT IFRAME AFTER API CALL (Step 2) ---
         // Update the src of the existing iframe with the real URL        
-        iframe.src = `https://dev.botbuster.io/session_id=QC-12345&skin_type=${data.captcha_uid}&email=${userEmail}&mfa=true&website_url=${loadedWebsiteUrl}`
+        iframe.src = `https://dev.botbuster.io/session_id=QC-12345&skin_type=${data.captcha_uid}&email=${userEmail}&mfa=true&website_url=${normalizeToWWW(loadedWebsiteUrl)}`
         // Post-message logic
         iframe.addEventListener("load", () => {
           iframe.contentWindow.postMessage(
