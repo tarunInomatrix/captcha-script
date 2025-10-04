@@ -56,9 +56,8 @@
         console.log('✅ Botbuster SDK initialized successfully.');
         
         // --- INJECT IFRAME AFTER API CALL (Step 2) ---
-        // Update the src of the existing iframe with the real URL
-        iframe.src = `https://dev.botbuster.io/${data.captcha_uid}`;
-        
+        // Update the src of the existing iframe with the real URL        
+        iframe.src = `https://dev.botbuster.io/session_id=QC-12345&skin_type=${data.captcha_uid}&email=${userEmail}&mfa=true&website_url=${loadedWebsiteUrl}`
         // Post-message logic
         iframe.addEventListener("load", () => {
           iframe.contentWindow.postMessage(
