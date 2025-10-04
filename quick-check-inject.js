@@ -13,8 +13,8 @@
   
   // --- INJECT IFRAME BEFORE API CALL (Step 1) ---
   const iframe = document.createElement('iframe');
-  iframe.id = 'https://dev.botbuster.io/test';
-  iframe.src = 'about:blank'; // Placeholder URL
+  iframe.id = 'botbuster-iframe';
+  iframe.src = 'https://dev.botbuster.io/test'; // Placeholder URL
   iframe.style.width = '100%';
   iframe.style.height = '700px';
   iframe.style.border = '1px solid #ccc';
