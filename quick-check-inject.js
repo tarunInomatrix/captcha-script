@@ -33,6 +33,27 @@
   container.appendChild(iframe);
   console.log('Temporary iframe injected successfully.');
 
+  function hasEmailOption(mfa) {
+  if (!Array.isArray(mfa)) return false;
+
+  return mfa.some(obj => {
+    if (!obj || typeof obj !== 'object') return false;
+
+    // 1) options as array: ["email", "text"]
+    if (Array.isArray(obj.options)) {
+      if (obj.options.some(opt => String(opt).toLowerCase() === 'email')) return true;
+    }
+
+    // 2) options as single string: "email"
+    if (typeof obj.options === 'string' && obj.options.toLowerCase() === 'email') return true;
+
+    // 3) explicit boolean property: email: true
+    if (obj.email === true) return true;
+
+    return false;
+  });
+}
+
   function normalizeToWWW(input) {
   if (!input || typeof input !== 'string') return null;
 
@@ -82,7 +103,7 @@
         
         // --- INJECT IFRAME AFTER API CALL (Step 2) ---
         // Update the src of the existing iframe with the real URL        
-        iframe.src = `https://dev.botbuster.io/session_id=QC-12345&skin_type=${data.captcha_uid}&email=${userEmail}&mfa=true&website_url=${normalizeToWWW(loadedWebsiteUrl)}`
+        iframe.src = `https://dev.botbuster.io/session_id=QC-12345&skin_type=${data.captcha_uid}&email=${userEmail}&mfa=${hasEmailOption(data?.config?.mfa}&website_url=${normalizeToWWW(loadedWebsiteUrl)}`
         // Post-message logic
         iframe.addEventListener("load", () => {
           iframe.contentWindow.postMessage(
