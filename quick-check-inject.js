@@ -10,6 +10,15 @@
     const loadedWebsiteUrl = currentScript.getAttribute('data-web-url') || null;
     let activeEmail = userEmail;
 
+    console.log('[Botbuster Debug] Script started.');
+    console.log('[Botbuster Debug] Configuration:', {
+        apiKey,
+        userEmail,
+        loadedActionId,
+        loadedEmailElement,
+        loadedWebsiteUrl
+    });
+
     console.log('loadedWebsiteUrl', loadedWebsiteUrl);
 
     // --- INJECT IFRAME BEFORE API CALL (Step 1) ---
@@ -141,10 +150,11 @@
             }
 
             // 2. If not found, observe DOM changes
-            console.log(`Email element '${selectorOrId}' not found yet. Waiting for it...`);
+            console.log(`[Botbuster Debug] Email element '${selectorOrId}' not found yet. Starting MutationObserver...`);
             const observer = new MutationObserver((mutations, obs) => {
                 const el = document.getElementById(selectorOrId) || document.querySelector(selectorOrId);
                 if (el) {
+                    console.log(`[Botbuster Debug] Element '${selectorOrId}' found via MutationObserver.`);
                     obs.disconnect();
                     resolve(el);
                 }
@@ -164,10 +174,14 @@
             // Handler for email changes
             const handleEmailChange = (event) => {
                 const newEmail = event.target.value;
+                console.log(`[Botbuster Debug] Event '${event.type}' detected. Value: '${newEmail}'. Active: '${activeEmail}'`);
+
                 // Basic validation to avoid unnecessary reloads
                 if (newEmail && newEmail.includes('@') && newEmail !== activeEmail) {
-                    console.log(`Email changed to ${newEmail}, reloading SDK...`);
+                    console.log(`[Botbuster Debug] Valid email change detected. Reloading SDK...`);
                     init(newEmail);
+                } else {
+                    console.log(`[Botbuster Debug] Change ignored. (Valid: ${newEmail && newEmail.includes('@')}, New: ${newEmail !== activeEmail})`);
                 }
             };
 
