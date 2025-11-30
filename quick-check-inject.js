@@ -8,6 +8,7 @@
     const loadedActionId = currentScript.getAttribute('data-action-id') || null;
     const loadedEmailElement = currentScript.getAttribute('data-email-element') || null;
     const loadedWebsiteUrl = currentScript.getAttribute('data-web-url') || null;
+    let activeEmail = userEmail;
 
     console.log('loadedWebsiteUrl', loadedWebsiteUrl);
 
@@ -81,7 +82,10 @@
 
     // --- Start the API call after the temporary iframe is in place ---
     async function init(emailOverride = null) {
-        const finalEmail = emailOverride || userEmail;
+        if (emailOverride) {
+            activeEmail = emailOverride;
+        }
+        const finalEmail = activeEmail;
         console.log('Initializing Botbuster SDK with email:', finalEmail);
 
         try {
@@ -126,20 +130,29 @@
     }
 
     // --- Bind to Email Input if provided ---
-    if (loadedEmailElement) {
-        const emailInput = document.getElementById(loadedEmailElement) || document.querySelector(loadedEmailElement);
-        if (emailInput) {
-            console.log(`Found email input element: ${loadedEmailElement}`);
-            emailInput.addEventListener('blur', (event) => {
-                const newEmail = event.target.value;
-                if (newEmail && newEmail !== userEmail) {
-                    console.log('Email input changed, reloading SDK...');
-                    init(newEmail);
-                }
-            });
-        } else {
-            console.warn(`Could not find email input element with selector: ${loadedEmailElement}`);
+
+    function bindEmailInput() {
+        if (loadedEmailElement) {
+            const emailInput = document.getElementById(loadedEmailElement) || document.querySelector(loadedEmailElement);
+            if (emailInput) {
+                console.log(`Found email input element: ${loadedEmailElement}`);
+                emailInput.addEventListener('blur', (event) => {
+                    const newEmail = event.target.value;
+                    if (newEmail && newEmail !== activeEmail) {
+                        console.log('Email input changed, reloading SDK...');
+                        init(newEmail);
+                    }
+                });
+            } else {
+                console.warn(`Could not find email input element with selector: ${loadedEmailElement}`);
+            }
         }
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', bindEmailInput);
+    } else {
+        bindEmailInput();
     }
 
     init();
