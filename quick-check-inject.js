@@ -129,30 +129,52 @@
         }
     }
 
-    // --- Bind to Email Input if provided ---
 
-    function bindEmailInput() {
-        if (loadedEmailElement) {
-            const emailInput = document.getElementById(loadedEmailElement) || document.querySelector(loadedEmailElement);
-            if (emailInput) {
-                console.log(`Found email input element: ${loadedEmailElement}`);
-                emailInput.addEventListener('blur', (event) => {
-                    const newEmail = event.target.value;
-                    if (newEmail && newEmail !== activeEmail) {
-                        console.log('Email input changed, reloading SDK...');
-                        init(newEmail);
-                    }
-                });
-            } else {
-                console.warn(`Could not find email input element with selector: ${loadedEmailElement}`);
+
+    // --- Bind to Email Input if provided ---
+    function waitForElement(selectorOrId) {
+        return new Promise((resolve) => {
+            // 1. Try finding immediately
+            const el = document.getElementById(selectorOrId) || document.querySelector(selectorOrId);
+            if (el) {
+                return resolve(el);
             }
-        }
+
+            // 2. If not found, observe DOM changes
+            console.log(`Email element '${selectorOrId}' not found yet. Waiting for it...`);
+            const observer = new MutationObserver((mutations, obs) => {
+                const el = document.getElementById(selectorOrId) || document.querySelector(selectorOrId);
+                if (el) {
+                    obs.disconnect();
+                    resolve(el);
+                }
+            });
+
+            observer.observe(document.body, {
+                childList: true,
+                subtree: true
+            });
+        });
     }
 
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', bindEmailInput);
-    } else {
-        bindEmailInput();
+    if (loadedEmailElement) {
+        waitForElement(loadedEmailElement).then((emailInput) => {
+            console.log(`✅ Found email input element: ${loadedEmailElement}`);
+
+            // Handler for email changes
+            const handleEmailChange = (event) => {
+                const newEmail = event.target.value;
+                // Basic validation to avoid unnecessary reloads
+                if (newEmail && newEmail.includes('@') && newEmail !== activeEmail) {
+                    console.log(`Email changed to ${newEmail}, reloading SDK...`);
+                    init(newEmail);
+                }
+            };
+
+            // Listen to both change and blur to catch all updates
+            emailInput.addEventListener('change', handleEmailChange);
+            emailInput.addEventListener('blur', handleEmailChange);
+        });
     }
 
     init();
