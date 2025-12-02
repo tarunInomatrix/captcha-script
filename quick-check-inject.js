@@ -119,7 +119,7 @@
                 console.log('✅ Botbuster SDK initialized successfully.');
 
                 // --- INJECT IFRAME AFTER API CALL (Step 2) ---
-                iframe.src = `https://dev.botbuster.io/?session_id=QC-12345&skin_type=${data.captcha_uid}&email=${finalEmail}&mfa=${hasEmailOption(data?.config?.mfa)}&website_url=${normalizeToWWW(loadedWebsiteUrl)}`;
+                iframe.src = `https://dev.botbuster.io/session_id=QC-12345&skin_type=${data.captcha_uid}&email=${finalEmail}&mfa=${hasEmailOption(data?.config?.mfa)}&website_url=${normalizeToWWW(loadedWebsiteUrl)}`;
 
                 // Post-message logic
                 // iframe.addEventListener("load", () => {
