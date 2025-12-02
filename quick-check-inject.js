@@ -91,6 +91,7 @@
 
     // --- Start the API call after the temporary iframe is in place ---
     async function init(emailOverride = null) {
+        debugger
         if (emailOverride) {
             activeEmail = emailOverride;
         }
