@@ -1,7 +1,7 @@
 (function () {
     const currentScript = document.currentScript;
 
-    // 1. Read configuration
+    // 1. Read configuration from script tag attributes
     const apiKey = currentScript.getAttribute('data-api-key');
     const userEmail = currentScript.getAttribute('data-email');
     const parentContainerId = 'botbuster-container';
@@ -19,10 +19,10 @@
         loadedWebsiteUrl
     });
 
-    // 2. Setup Iframe
+    // 2. Setup Iframe (Temporary Injection)
     const iframe = document.createElement('iframe');
     iframe.id = 'botbuster-iframe';
-    iframe.src = 'https://dev.botbuster.io/test'; // Placeholder
+    iframe.src = 'https://dev.botbuster.io/test'; // Placeholder URL
     iframe.style.width = '100%';
     iframe.style.height = '700px';
     iframe.style.border = '1px solid #ccc';
@@ -35,8 +35,10 @@
         container = document.createElement('div');
         container.id = parentContainerId;
         document.body.appendChild(container);
+        console.log(`Created container #${parentContainerId} for the iframe.`);
     }
     container.appendChild(iframe);
+    console.log('Temporary iframe injected successfully.');
 
     // 3. Utility Functions
     function hasEmailOption(mfa) {
@@ -83,9 +85,11 @@
         return new Promise((resolve) => {
             const el = document.getElementById(selectorOrId) || document.querySelector(selectorOrId);
             if (el) return resolve(el);
+            console.log(`[Botbuster Debug] Email element '${selectorOrId}' not found yet. Starting MutationObserver...`);
             const observer = new MutationObserver((mutations, obs) => {
                 const el = document.getElementById(selectorOrId) || document.querySelector(selectorOrId);
                 if (el) {
+                    console.log(`[Botbuster Debug] Element '${selectorOrId}' found via MutationObserver.`);
                     obs.disconnect();
                     resolve(el);
                 }
@@ -94,9 +98,8 @@
         });
     }
 
-    // 4. Main Init Function
+    // 4. Main Init Function (API Call and Iframe Source Update)
     async function init(emailOverride = null) {
-        // debugger // Removed debugger for smoother execution
         if (emailOverride) {
             activeEmail = emailOverride;
         }
@@ -120,6 +123,8 @@
 
             if (data.code === "CONFIG_LOADED") {
                 console.log('✅ Botbuster SDK initialized successfully.');
+                
+                // --- Update iframe src to the real CAPTCHA URL ---
                 iframe.src = `https://dev.botbuster.io/session_id=QC-12345&skin_type=${data.captcha_uid}&email=${finalEmail}&mfa=${hasEmailOption(data?.config?.mfa)}&website_url=${normalizeToWWW(loadedWebsiteUrl)}`;
                 
                 iframe.onload = () => {
@@ -139,13 +144,21 @@
     // 5. Bind Listeners and Start
     if (loadedEmailElement) {
         waitForElement(loadedEmailElement).then((emailInput) => {
-            console.log(`✅ Found email input element: ${loadedEmailElement}`);
+            
+            // --- Type Check for robustness ---
+            if (emailInput.tagName !== 'INPUT' || emailInput.type !== 'email') {
+                console.warn(`[Botbuster Debug] Element '${loadedEmailElement}' found but is not an INPUT with type="email". Skipping binding.`);
+                return; 
+            }
+            
+            console.log(`✅ Found email input element: ${loadedEmailElement} with type="email"`);
 
             const checkAndInit = (emailVal) => {
                 const newEmail = emailVal ? emailVal.trim() : '';
-                // Validate email format and check if it's different from active
+                
+                // Validate: Must have @, must be different from current activeEmail, must be reasonably long
                 if (newEmail && newEmail.includes('@') && newEmail !== activeEmail && newEmail.length > 5) {
-                    console.log(`[Botbuster Debug] Valid email change detected: ${newEmail}`);
+                    console.log(`[Botbuster Debug] Valid email change detected: ${newEmail}. Triggering init.`);
                     init(newEmail);
                 } else {
                      console.log(`[Botbuster Debug] Change ignored. Active: ${activeEmail}, New: ${newEmail}`);
@@ -162,24 +175,12 @@
                 checkAndInit(e.target.value);
             };
 
-            // 3. Autocomplete/Autofill detection (Handles programmatic changes like React state updates or browser autofill)
-            // This is added to catch changes not triggered by standard keyboard events.
-            const autofillHandler = (e) => {
-                // Check a common animation name used by browsers for autofill
-                if (e.animationName === 'onAutoFillStart' || e.animationName === 'autofill') {
-                    // Use a slight timeout to ensure the browser/framework has fully set the value
-                    setTimeout(() => checkAndInit(emailInput.value), 50);
-                }
-            };
-
             emailInput.addEventListener('input', debouncedHandler);
             emailInput.addEventListener('blur', blurHandler);
-            
-            // Listen for animationstart event in the capture phase for better detection
-            emailInput.addEventListener('animationstart', autofillHandler, true);
         });
     }
 
     // Initial run
     init();
+
 })();
