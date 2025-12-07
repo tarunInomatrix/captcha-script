@@ -108,6 +108,13 @@
             activeEmail = emailOverride;
         }
         const finalEmail = activeEmail;
+        
+        // Skip initialization if the email is empty or invalid
+        if (!finalEmail || finalEmail.length < 6 || !finalEmail.includes('@')) {
+             console.log('Skipping init: Email is empty, invalid, or too short.');
+             return;
+        }
+
         console.log('Initializing Botbuster SDK with email:', finalEmail);
 
         try {
@@ -148,7 +155,6 @@
 
     // 5. Bind Listeners and Start
     if (loadedEmailElement) {
-        debugger
         waitForElement(loadedEmailElement).then((emailInput) => {
             
             // CRITICAL: Ensure we are only binding to an <input type="email">
@@ -158,10 +164,33 @@
             }
             
             console.log(`✅ Found email input element: ${loadedEmailElement} with type="email". Binding events.`);
+            
+            // --- NEW INITIALIZATION LOGIC ---
+            // After finding the element, use its current value for the initial load if it's different/better than the attribute.
+            const currentEmailValue = emailInput.value.trim();
+            if (currentEmailValue && currentEmailValue !== activeEmail) {
+                console.log(`[Botbuster Debug] Found initial email in DOM: ${currentEmailValue}. Overriding attribute value.`);
+                init(currentEmailValue);
+            } else {
+                // If the input value is empty or the same as the attribute, run the original init call
+                // (This handles cases where the form is pre-filled via React state, not just attributes)
+                if (!activeEmail || activeEmail.length < 6 || !activeEmail.includes('@')) {
+                     // Only run init if the current email (from DOM or attribute) is valid
+                     if (currentEmailValue) {
+                         init(currentEmailValue);
+                     } else {
+                         init(); // Use attribute value if DOM is empty
+                     }
+                }
+            }
+
 
             const checkAndInit = (emailVal) => {
                 const newEmail = emailVal ? emailVal.trim() : '';
                 
+                // The core condition for re-initialization:
+                // 1. Is it a valid-looking email (has @ and is long enough)?
+                // 2. Is it DIFFERENT from the last email we successfully initialized with (activeEmail)?
                 if (newEmail && newEmail.includes('@') && newEmail !== activeEmail && newEmail.length > 5) {
                     console.log(`[Botbuster Debug] Email updated from ${activeEmail} to ${newEmail}. Triggering initSDK.`);
                     init(newEmail);
@@ -186,7 +215,16 @@
         });
     }
 
-    // Initial SDK load (uses the data-email attribute value)
-    init();
+    // Fallback/Initial SDK load (uses the data-email attribute value)
+    // NOTE: This will likely run before the element is found, but the logic above 
+    // attempts to fix the activeEmail state once the element is available.
+    if (!loadedEmailElement) {
+        // If no element selector is provided, just initialize with the attribute email
+        init();
+    } else {
+        // If an element is provided, we defer the initial run to the waitForElement promise handler 
+        // to check the live DOM value, but we still run a quick initial check just in case.
+        init();
+    }
 
 })();
