@@ -148,6 +148,7 @@
 
     // 5. Bind Listeners and Start
     if (loadedEmailElement) {
+        debugger
         waitForElement(loadedEmailElement).then((emailInput) => {
             
             // CRITICAL: Ensure we are only binding to an <input type="email">
@@ -161,7 +162,6 @@
             const checkAndInit = (emailVal) => {
                 const newEmail = emailVal ? emailVal.trim() : '';
                 
-                debugger
                 if (newEmail && newEmail.includes('@') && newEmail !== activeEmail && newEmail.length > 5) {
                     console.log(`[Botbuster Debug] Email updated from ${activeEmail} to ${newEmail}. Triggering initSDK.`);
                     init(newEmail);
