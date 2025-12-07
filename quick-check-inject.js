@@ -165,24 +165,13 @@
             
             console.log(`✅ Found email input element: ${loadedEmailElement} with type="email". Binding events.`);
             
-            // --- NEW INITIALIZATION LOGIC ---
-            // After finding the element, use its current value for the initial load if it's different/better than the attribute.
-            const currentEmailValue = emailInput.value.trim();
-            if (currentEmailValue && currentEmailValue !== activeEmail) {
-                console.log(`[Botbuster Debug] Found initial email in DOM: ${currentEmailValue}. Overriding attribute value.`);
-                init(currentEmailValue);
-            } else {
-                // If the input value is empty or the same as the attribute, run the original init call
-                // (This handles cases where the form is pre-filled via React state, not just attributes)
-                if (!activeEmail || activeEmail.length < 6 || !activeEmail.includes('@')) {
-                     // Only run init if the current email (from DOM or attribute) is valid
-                     if (currentEmailValue) {
-                         init(currentEmailValue);
-                     } else {
-                         init(); // Use attribute value if DOM is empty
-                     }
-                }
-            }
+            // --- INITIALIZATION LOGIC (UPDATED) ---
+            // Use the DOM value as the source of truth for the initial load
+            const initialEmail = emailInput.value.trim();
+            console.log(`[Botbuster Debug] Initializing with live DOM email value: ${initialEmail}`);
+            // This is the first and only guaranteed init() call when loadedEmailElement is provided.
+            init(initialEmail); 
+            // Note: init() updates activeEmail, so listeners below will use the correct baseline.
 
 
             const checkAndInit = (emailVal) => {
@@ -215,16 +204,12 @@
         });
     }
 
-    // Fallback/Initial SDK load (uses the data-email attribute value)
-    // NOTE: This will likely run before the element is found, but the logic above 
-    // attempts to fix the activeEmail state once the element is available.
+    // 6. Initial SDK Load Trigger (Finalized)
     if (!loadedEmailElement) {
-        // If no element selector is provided, just initialize with the attribute email
+        // If NO element selector is provided, initialize immediately with the attribute value.
         init();
-    } else {
-        // If an element is provided, we defer the initial run to the waitForElement promise handler 
-        // to check the live DOM value, but we still run a quick initial check just in case.
-        init();
-    }
+    } 
+    // If an element is provided, the initialization is handled exclusively within the 
+    // waitForElement.then(...) block to ensure we read the live DOM value.
 
 })();
