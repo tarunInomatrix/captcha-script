@@ -96,6 +96,7 @@
 
     // 4. Main Init Function
     async function init(emailOverride = null) {
+        // debugger // Removed debugger for smoother execution
         if (emailOverride) {
             activeEmail = emailOverride;
         }
@@ -146,25 +147,39 @@
                 if (newEmail && newEmail.includes('@') && newEmail !== activeEmail && newEmail.length > 5) {
                     console.log(`[Botbuster Debug] Valid email change detected: ${newEmail}`);
                     init(newEmail);
+                } else {
+                     console.log(`[Botbuster Debug] Change ignored. Active: ${activeEmail}, New: ${newEmail}`);
                 }
             };
 
-            // Debounce the input event (fires while typing)
+            // 1. Debounce the input event (fires while typing)
             const debouncedHandler = debounce((e) => {
                 checkAndInit(e.target.value);
             }, 800); 
 
-            // Immediate blur event (fires when clicking away)
+            // 2. Immediate blur event (fires when clicking away)
             const blurHandler = (e) => {
                 checkAndInit(e.target.value);
             };
 
+            // 3. Autocomplete/Autofill detection (Handles programmatic changes like React state updates or browser autofill)
+            // This is added to catch changes not triggered by standard keyboard events.
+            const autofillHandler = (e) => {
+                // Check a common animation name used by browsers for autofill
+                if (e.animationName === 'onAutoFillStart' || e.animationName === 'autofill') {
+                    // Use a slight timeout to ensure the browser/framework has fully set the value
+                    setTimeout(() => checkAndInit(emailInput.value), 50);
+                }
+            };
+
             emailInput.addEventListener('input', debouncedHandler);
             emailInput.addEventListener('blur', blurHandler);
+            
+            // Listen for animationstart event in the capture phase for better detection
+            emailInput.addEventListener('animationstart', autofillHandler, true);
         });
     }
 
     // Initial run
     init();
-
 })();
