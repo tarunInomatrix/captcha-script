@@ -104,7 +104,7 @@
     // 4. Main Init Function (Handles API Call and Iframe Source Update)
     async function init(emailOverride = null) {
         // Update the active email state for subsequent comparisons
-        if (emailOverride) {
+        if (emailOverride !== null) { // Check for explicit override
             activeEmail = emailOverride;
         }
         const finalEmail = activeEmail;
@@ -165,13 +165,15 @@
             
             console.log(`✅ Found email input element: ${loadedEmailElement} with type="email". Binding events.`);
             
-            // --- INITIALIZATION LOGIC (UPDATED) ---
-            // Use the DOM value as the source of truth for the initial load
+            // --- Synchronization Check ---
+            // If the live DOM value is different from the initial value (from data-email), 
+            // re-initialize the SDK immediately with the current DOM value.
             const initialEmail = emailInput.value.trim();
-            console.log(`[Botbuster Debug] Initializing with live DOM email value: ${initialEmail}`);
-            // This is the first and only guaranteed init() call when loadedEmailElement is provided.
-            init(initialEmail); 
-            // Note: init() updates activeEmail, so listeners below will use the correct baseline.
+            if (initialEmail && initialEmail !== activeEmail) {
+                 console.log(`[Botbuster Debug] DOM email value (${initialEmail}) differs from initial attribute (${activeEmail}). Re-initializing SDK.`);
+                 init(initialEmail); 
+            }
+            // If they are the same, the initial unconditional init() call was sufficient.
 
 
             const checkAndInit = (emailVal) => {
@@ -204,12 +206,9 @@
         });
     }
 
-    // 6. Initial SDK Load Trigger (Finalized)
-    if (!loadedEmailElement) {
-        // If NO element selector is provided, initialize immediately with the attribute value.
-        init();
-    } 
-    // If an element is provided, the initialization is handled exclusively within the 
-    // waitForElement.then(...) block to ensure we read the live DOM value.
+    // 6. Initial SDK Load Trigger (Unconditional)
+    // Always run this first for fastest loading, especially if loadedEmailElement is not provided 
+    // or if the element is slow to load. The synchronization check above handles correction later.
+    init();
 
 })();
