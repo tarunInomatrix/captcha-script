@@ -122,13 +122,13 @@
                 iframe.src = `https://dev.botbuster.io/session_id=QC-12345&skin_type=${data.captcha_uid}&email=${finalEmail}&mfa=${hasEmailOption(data?.config?.mfa)}&website_url=${normalizeToWWW(loadedWebsiteUrl)}`;
 
                 // Post-message logic
-                // iframe.addEventListener("load", () => {
-                //     iframe.contentWindow.postMessage(
-                //         { type: "BOTBUSTER_INIT", url: loadedWebsiteUrl },
-                //         "https://dev.botbuster.io"
-                //     );
-                // });
-                // console.log('Iframe src updated to the real CAPTCHA URL.');
+                iframe.addEventListener("load", () => {
+                    iframe.contentWindow.postMessage(
+                        { type: "BOTBUSTER_INIT", url: loadedWebsiteUrl },
+                        "https://dev.botbuster.io"
+                    );
+                });
+                console.log('Iframe src updated to the real CAPTCHA URL.');
             } else {
                 const errorMessage = data.message || 'Unknown error during initialization.';
                 console.warn(`⚠️ Botbuster SDK initialization failed: ${errorMessage}`);
