@@ -161,14 +161,12 @@
             const checkAndInit = (emailVal) => {
                 const newEmail = emailVal ? emailVal.trim() : '';
                 
-                // The core condition for re-initialization:
-                // 1. Is it a valid-looking email (has @ and is long enough)?
-                // 2. Is it DIFFERENT from the last email we successfully initialized with (activeEmail)?
+                debugger
                 if (newEmail && newEmail.includes('@') && newEmail !== activeEmail && newEmail.length > 5) {
-                    console.log(`[Botbuster Debug] Valid email change detected: ${newEmail}. Triggering init.`);
+                    console.log(`[Botbuster Debug] Email updated from ${activeEmail} to ${newEmail}. Triggering initSDK.`);
                     init(newEmail);
                 } else {
-                     console.log(`[Botbuster Debug] Change ignored (either invalid or value hasn't changed). Active: ${activeEmail}, New: ${newEmail}`);
+                     console.log(`[Botbuster Debug] Change ignored. New email is ${newEmail.length > 0 ? 'valid but unchanged' : 'empty/invalid'} or shorter than 6 characters.`);
                 }
             };
 
