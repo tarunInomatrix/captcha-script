@@ -8,7 +8,8 @@
     const loadedActionId = currentScript.getAttribute('data-action-id') || null;
     const loadedEmailElement = currentScript.getAttribute('data-email-element') || null;
     const loadedWebsiteUrl = currentScript.getAttribute('data-web-url') || null;
-    let activeEmail = userEmail;
+    // activeEmail stores the email that the SDK was last successfully initialized with
+    let activeEmail = userEmail; 
 
     console.log('[Botbuster Debug] Script started.');
     console.log('[Botbuster Debug] Configuration:', {
@@ -72,6 +73,7 @@
         }
     }
 
+    // Debounce Utility: Ensures func is only called once after a pause of 'wait' ms.
     function debounce(func, wait) {
         let timeout;
         return function(...args) {
@@ -81,6 +83,7 @@
         };
     }
 
+    // Finds the target element, waiting for it if necessary (useful for async React/framework rendering)
     function waitForElement(selectorOrId) {
         return new Promise((resolve) => {
             const el = document.getElementById(selectorOrId) || document.querySelector(selectorOrId);
@@ -98,8 +101,9 @@
         });
     }
 
-    // 4. Main Init Function (API Call and Iframe Source Update)
+    // 4. Main Init Function (Handles API Call and Iframe Source Update)
     async function init(emailOverride = null) {
+        // Update the active email state for subsequent comparisons
         if (emailOverride) {
             activeEmail = emailOverride;
         }
@@ -124,9 +128,10 @@
             if (data.code === "CONFIG_LOADED") {
                 console.log('✅ Botbuster SDK initialized successfully.');
                 
-                // --- Update iframe src to the real CAPTCHA URL ---
+                // Construct the final iframe URL with configuration data
                 iframe.src = `https://dev.botbuster.io/session_id=QC-12345&skin_type=${data.captcha_uid}&email=${finalEmail}&mfa=${hasEmailOption(data?.config?.mfa)}&website_url=${normalizeToWWW(loadedWebsiteUrl)}`;
                 
+                // Post message after the iframe loads
                 iframe.onload = () => {
                      iframe.contentWindow.postMessage(
                         { type: "BOTBUSTER_INIT", url: loadedWebsiteUrl },
@@ -145,42 +150,45 @@
     if (loadedEmailElement) {
         waitForElement(loadedEmailElement).then((emailInput) => {
             
-            // --- Type Check for robustness ---
+            // CRITICAL: Ensure we are only binding to an <input type="email">
             if (emailInput.tagName !== 'INPUT' || emailInput.type !== 'email') {
-                console.warn(`[Botbuster Debug] Element '${loadedEmailElement}' found but is not an INPUT with type="email". Skipping binding.`);
+                console.warn(`[Botbuster Debug] Element '${loadedEmailElement}' found but is not an INPUT with type="email". Skipping dynamic binding.`);
                 return; 
             }
             
-            console.log(`✅ Found email input element: ${loadedEmailElement} with type="email"`);
+            console.log(`✅ Found email input element: ${loadedEmailElement} with type="email". Binding events.`);
 
             const checkAndInit = (emailVal) => {
                 const newEmail = emailVal ? emailVal.trim() : '';
                 
-                // Validate: Must have @, must be different from current activeEmail, must be reasonably long
+                // The core condition for re-initialization:
+                // 1. Is it a valid-looking email (has @ and is long enough)?
+                // 2. Is it DIFFERENT from the last email we successfully initialized with (activeEmail)?
                 if (newEmail && newEmail.includes('@') && newEmail !== activeEmail && newEmail.length > 5) {
                     console.log(`[Botbuster Debug] Valid email change detected: ${newEmail}. Triggering init.`);
                     init(newEmail);
                 } else {
-                     console.log(`[Botbuster Debug] Change ignored. Active: ${activeEmail}, New: ${newEmail}`);
+                     console.log(`[Botbuster Debug] Change ignored (either invalid or value hasn't changed). Active: ${activeEmail}, New: ${newEmail}`);
                 }
             };
 
-            // 1. Debounce the input event (fires while typing)
+            // 1. Debounced Handler: Calls checkAndInit 800ms after the user stops typing
             const debouncedHandler = debounce((e) => {
                 checkAndInit(e.target.value);
             }, 800); 
 
-            // 2. Immediate blur event (fires when clicking away)
+            // 2. Blur Handler: Calls checkAndInit immediately when focus leaves the input
             const blurHandler = (e) => {
                 checkAndInit(e.target.value);
             };
 
+            // Attach listeners
             emailInput.addEventListener('input', debouncedHandler);
             emailInput.addEventListener('blur', blurHandler);
         });
     }
 
-    // Initial run
+    // Initial SDK load (uses the data-email attribute value)
     init();
 
 })();
