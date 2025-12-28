@@ -1,37 +1,38 @@
 (function () {
     const currentScript = document.currentScript;
     const apiKey = currentScript.getAttribute('data-api-key');
-    const initialEmail = currentScript.getAttribute('data-email');
+    const initialEmail = currentScript.getAttribute('data-email'); // Initial value from React
     const loadedActionId = currentScript.getAttribute('data-action-id');
-    const loadedEmailElement = currentScript.getAttribute('data-email-element'); 
+    const loadedEmailElement = currentScript.getAttribute('data-email-element'); // Config ID (might be wrong)
     const loadedWebsiteUrl = currentScript.getAttribute('data-web-url');
 
     let currentLoadedEmail = null; 
 
-    console.log(`[Botbuster] Configured to watch Input ID: "${loadedEmailElement}"`);
-
-    // --- Iframe Setup (Same as before) ---
+    // --- Iframe Setup ---
     const parentContainerId = 'botbuster-container';
     let container = document.getElementById(parentContainerId);
     if (!container) {
         container = document.createElement('div');
         container.id = parentContainerId;
-        document.body.appendChild(container);
+        document.body.appendChild(container); // Fallback
     }
-    container.innerHTML = ''; 
+    container.innerHTML = ''; // Start clean
     const iframe = document.createElement('iframe');
     iframe.id = 'botbuster-iframe';
     iframe.style.cssText = 'width: 100%; height: 700px; border: none; margin-top: 20px;';
-    iframe.src = 'about:blank'; 
+    iframe.src = 'about:blank';
     container.appendChild(iframe);
 
     // --- Init Function ---
     async function initSDK(email) {
+        // Validation: Must be valid email string
         if (!email || email.length < 5 || !email.includes('@')) return;
+        
+        // Efficiency: Don't reload if it's the same email
         if (email === currentLoadedEmail) return; 
 
-        console.log(`[Botbuster] ✅ Loading SDK for: ${email}`);
-        
+        console.log(`[Botbuster] Adapting: Detected email change to "${email}"`);
+
         try {
             const res = await fetch('https://5znp405k6i.execute-api.eu-north-1.amazonaws.com/dev/initSDK', {
                 method: 'POST',
@@ -43,7 +44,8 @@
             });
             const data = await res.json();
             if (data.code === "CONFIG_LOADED") {
-                iframe.src = `https://dev.botbuster.io/session_id=QC-12345&email=${email}&website_url=${loadedWebsiteUrl}&skin_type=${data.captcha_uid}`;
+                const src = `https://dev.botbuster.io/session_id=QC-12345&email=${email}&website_url=${loadedWebsiteUrl}&skin_type=${data.captcha_uid}`;
+                iframe.src = src;
                 currentLoadedEmail = email;
             }
         } catch (e) {
@@ -51,29 +53,39 @@
         }
     }
 
-    // --- DEBUG Event Listener ---
+    // --- ADAPTIVE EVENT LISTENER ---
+    // Problem: React App ID ('email') != Config ID ('auth-email')
+    // Solution: Listen for ANY email input.
     let timer;
-    document.addEventListener('input', (e) => {
+    const handleInput = (e) => {
         const target = e.target;
-        if (target.tagName !== 'INPUT') return;
+        if (!target) return;
 
-        // DEBUG LOGGING
-        if (target.type === 'email' || target.name === 'email' || target.id.includes('email')) {
-             if (target.id !== loadedEmailElement) {
-                 console.warn(`[Botbuster] ⚠️ Saw input in "#${target.id}" but configured to only watch "#${loadedEmailElement}". Please update data-email-element!`);
-             }
-        }
+        // HEURISTIC MATCHING:
+        // 1. Configured ID Match (auth-email)
+        // 2. Standard ID Match (email)
+        // 3. Type Match (type="email")
+        // 4. Name Match (name="email")
+        const isEmailField = (loadedEmailElement && target.id === loadedEmailElement) || 
+                             (target.id === 'email') ||
+                             (target.type === 'email') || 
+                             (target.name === 'email');
 
-        if (target.id === loadedEmailElement) {
+        if (isEmailField) {
             clearTimeout(timer);
+            // Debounce 800ms
             timer = setTimeout(() => {
-                const val = target.value.trim();
-                console.log(`[Botbuster] Detected valid source change: ${val}`);
-                initSDK(val);
+                initSDK(target.value.trim());
             }, 800);
         }
-    }, true);
+    };
 
-    initSDK(initialEmail);
+    // Use Capture Phase ('true') to ensure we see events before React blocks them
+    document.addEventListener('input', handleInput, true);
+    document.addEventListener('change', handleInput, true);
 
+    // Initial Load (Use the guaranteed value passed from React props)
+    if (initialEmail) {
+        initSDK(initialEmail);
+    }
 })();
