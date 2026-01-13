@@ -32,9 +32,9 @@
     container.appendChild(iframe);
 
     // 3. Utilities
-    function normalizeToWWW(input) { /* ... (Same as before) ... */ 
+    function normalizeToWWW(input) { 
          if (!input) return null;
-         // (Your existing normalization logic here)
+         // (Your existing normalization logic here if needed, keeping simple pass-through as per snippet)
          return input; 
     }
     
@@ -84,18 +84,21 @@
             });
 
             const data = await response.json();
-            console.log(hasEmailOption(data.config.mfa), "hasemialoption")
-            if (data.code === "CONFIG_LOADED") {       
-                 iframe.src = `https://dev.botbuster.io/session_id=QC-12345&email=${finalEmail}&website_url=${loadedWebsiteUrl}&mfa=${hasEmailOption(data.config.mfa)}`;
-                console.log(iframe.src,"iFrame Logic")
+            // Use optional chaining for safety and calculate MFA status before interpolation
+            const mfaStatus = hasEmailOption(data?.config?.mfa);
+            console.log(mfaStatus, "hasemialoption");
+            
+            if (data.code === "CONFIG_LOADED") {        
+                 // Updated to use data.captcha_uid from the API response
+                 iframe.src = `https://dev.botbuster.io/session_id=${data.captcha_uid}&email=${finalEmail}&website_url=${loadedWebsiteUrl}&mfa=${mfaStatus}`;
+                console.log(iframe.src, "iFrame Logic");
             }
         } catch (error) {
             console.error('[Botbuster] Init Error:', error);
         }
     }
 
-    // 5. EVENT DELEGATION (The Fix)
-    // We attach to 'document' because React might re-render the input, removing direct listeners.
+    // 5. EVENT DELEGATION
     if (loadedEmailElement) {
         let debounceTimer;
 
@@ -103,7 +106,6 @@
         const isTarget = (target) => {
             if (!target) return false;
             if (target.id === loadedEmailElement) return true;
-            // Also check querySelector if it's a class or other selector
             try { 
                 if (target.matches(loadedEmailElement)) return true;
             } catch(e) {}
@@ -128,10 +130,10 @@
             }, 800); // 800ms delay
         }
 
-        // Use 'input' event to catch typing. Use 'true' for capture phase to catch events early.
+        // Use 'input' event to catch typing. Use 'true' for capture phase.
         document.addEventListener('input', handleInput, true); 
         
-        // Also listen for 'change' as a backup (fires on blur/enter)
+        // Also listen for 'change' as a backup
         document.addEventListener('change', handleInput, true);
     }
 
