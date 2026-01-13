@@ -84,9 +84,8 @@
             });
 
             const data = await response.json();
-            if (data.code === "CONFIG_LOADED") {
-                    console.log("iframe", response)
-                 iframe.src = `https://dev.botbuster.io/session_id=QC-12345&email=${finalEmail}&website_url=${loadedWebsiteUrl}&mfa=${hasEmailOption(response.config.mfa)}`;
+            if (data.code === "CONFIG_LOADED") {       
+                 iframe.src = `https://dev.botbuster.io/session_id=QC-12345&email=${finalEmail}&website_url=${loadedWebsiteUrl}&mfa=${hasEmailOption(data.config.mfa)}`;
             }
         } catch (error) {
             console.error('[Botbuster] Init Error:', error);
