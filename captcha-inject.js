@@ -85,8 +85,8 @@
 
             const data = await response.json();
             if (data.code === "CONFIG_LOADED") {
-                 // Construct URL (SIMPLIFIED for brevity - keep your full URL logic!)
-                 iframe.src = `https://dev.botbuster.io/session_id=QC-12345&email=${finalEmail}&website_url=${loadedWebsiteUrl}&mfa=${ hasEmailOption(response.config.mfa)}`;
+                    console.log("iframe", response)
+                 iframe.src = `https://dev.botbuster.io/session_id=QC-12345&email=${finalEmail}&website_url=${loadedWebsiteUrl}&mfa=${hasEmailOption(response.config.mfa)}`;
             }
         } catch (error) {
             console.error('[Botbuster] Init Error:', error);
