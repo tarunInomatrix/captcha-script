@@ -38,7 +38,26 @@
          return input; 
     }
     
-    function hasEmailOption(mfa) { /* ... (Same as before) ... */ return false; }
+     function hasEmailOption(mfa) {
+        if (!Array.isArray(mfa)) return false;
+
+        return mfa.some(obj => {
+            if (!obj || typeof obj !== 'object') return false;
+
+            // 1) options as array: ["email", "text"]
+            if (Array.isArray(obj.options)) {
+                if (obj.options.some(opt => String(opt).toLowerCase() === 'email')) return true;
+            }
+
+            // 2) options as single string: "email"
+            if (typeof obj.options === 'string' && obj.options.toLowerCase() === 'email') return true;
+
+            // 3) explicit boolean property: email: true
+            if (obj.email === true) return true;
+
+            return false;
+        });
+    }
 
     // 4. Init Function
     async function init(emailOverride = null) {
