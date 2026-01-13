@@ -84,6 +84,7 @@
             });
 
             const data = await response.json();
+            console.log(hasEmailOption(data.config.mfa), "hasemialoption")
             if (data.code === "CONFIG_LOADED") {       
                  iframe.src = `https://dev.botbuster.io/session_id=QC-12345&email=${finalEmail}&website_url=${loadedWebsiteUrl}&mfa=${hasEmailOption(data.config.mfa)}`;
             }
