@@ -55,7 +55,6 @@
 
     // --- MFA function -----
       function hasEmailOption(mfa) {
-         debugger
         if (!Array.isArray(mfa)) return false;
 
         return mfa.some(obj => {
