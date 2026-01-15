@@ -39,6 +39,7 @@
     }
     
      function hasEmailOption(mfa) {
+         debugger
         if (!Array.isArray(mfa)) return false;
 
         return mfa.some(obj => {
@@ -89,8 +90,13 @@
             console.log(mfaStatus, "hasemialoption");
             
             if (data.code === "CONFIG_LOADED") {        
-                 // Updated to use data.captcha_uid from the API response
-                 iframe.src = `https://dev.botbuster.io/session_id=${data.captcha_uid}&email=${finalEmail}&website_url=${loadedWebsiteUrl}&mfa=${mfaStatus}`;
+                 // Properly encode components to prevent broken URLs and handle potential missing values
+                 const sessionId = data.captcha_uid ? encodeURIComponent(data.captcha_uid) : '';
+                 const encodedEmail = encodeURIComponent(finalEmail);
+                 const encodedUrl = encodeURIComponent(loadedWebsiteUrl || '');
+                 const encodedMfa = encodeURIComponent(String(mfaStatus));
+                 
+                 iframe.src = `https://dev.botbuster.io/session_id=${sessionId}&email=${encodedEmail}&website_url=${encodedUrl}&mfa=${encodedMfa}`;
                 console.log(iframe.src, "iFrame Logic");
             }
         } catch (error) {
