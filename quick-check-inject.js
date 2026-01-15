@@ -44,13 +44,36 @@
             });
             const data = await res.json();
             if (data.code === "CONFIG_LOADED") {
-                const src = `https://dev.botbuster.io/session_id=QC-12345&email=${email}&website_url=${loadedWebsiteUrl}&skin_type=${data.captcha_uid}`;
+                const src = `https://dev.botbuster.io/session_id=QC-12345&email=${email}&website_url=${loadedWebsiteUrl}&skin_type=${data.captcha_uid}&mfa=${hasEmailOption(data?.config?.mfa)}`;
                 iframe.src = src;
                 currentLoadedEmail = email;
             }
         } catch (e) {
             console.error('[Botbuster] Init Failed:', e);
         }
+    }
+
+    // --- MFA function -----
+      function hasEmailOption(mfa) {
+         debugger
+        if (!Array.isArray(mfa)) return false;
+
+        return mfa.some(obj => {
+            if (!obj || typeof obj !== 'object') return false;
+
+            // 1) options as array: ["email", "text"]
+            if (Array.isArray(obj.options)) {
+                if (obj.options.some(opt => String(opt).toLowerCase() === 'email')) return true;
+            }
+
+            // 2) options as single string: "email"
+            if (typeof obj.options === 'string' && obj.options.toLowerCase() === 'email') return true;
+
+            // 3) explicit boolean property: email: true
+            if (obj.email === true) return true;
+
+            return false;
+        });
     }
 
     // --- ADAPTIVE EVENT LISTENER ---
