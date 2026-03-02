@@ -5,7 +5,7 @@
     const loadedActionId = currentScript.getAttribute('data-action-id');
     const loadedEmailElement = currentScript.getAttribute('data-email-element'); // Config ID (might be wrong)
     const loadedWebsiteUrl = currentScript.getAttribute('data-web-url');
-
+    const user_activationstatus = currentScript.getAttribute('user_activationstatus')'
     let currentLoadedEmail = null; 
 
     // --- Iframe Setup ---
