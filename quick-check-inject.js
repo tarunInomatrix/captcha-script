@@ -20,7 +20,7 @@
     // --- Init Function ---
     async function initSDK(email) {
         // Basic validation
-        if (!email || email.length < 5 || !email.includes('@')) return;
+        if (!email ) return;
         
         // Don't re-run if the email hasn't changed
         if (email === currentLoadedEmail) return; 
