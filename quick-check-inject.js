@@ -8,7 +8,7 @@
 
     let currentLoadedEmail = null; 
 
-    // --- Container Setup (No iframe created here) ---
+    // Ensure container exists
     const parentContainerId = 'botbuster-container';
     let container = document.getElementById(parentContainerId);
     if (!container) {
@@ -17,13 +17,11 @@
         document.body.appendChild(container); 
     }
 
-    // --- Init Function ---
     async function initSDK(email) {
-        // Basic validation
-        // if (!email || email.length < 5 || !email.includes('@')) return;
+        if (!email || email.length < 5 || !email.includes('@')) return;
         
-        // // Don't re-run if the email hasn't changed
-        // if (email === currentLoadedEmail) return; 
+        // Prevent unnecessary API calls if email hasn't actually changed
+        if (email === currentLoadedEmail) return; 
 
         try {
             const res = await fetch('https://5znp405k6i.execute-api.eu-north-1.amazonaws.com/dev/initSDK', {
@@ -35,80 +33,66 @@
                 })
             });
 
-            // 1. If API fails (500, 404, etc.), clear any old iframe and RETURN
             if (!res.ok) {
-                console.error(`[Botbuster] API Error ${res.status}. Aborting injection.`);
                 container.innerHTML = ''; 
                 return; 
             }
 
             const data = await res.json();
 
-            // 2. Only if the code is CONFIG_LOADED do we build the iframe
             if (data.code === "CONFIG_LOADED") {
-                container.innerHTML = ''; // Clear container
-                // Create the element ONLY on success
-                const iframe = document.createElement('iframe');
-                iframe.id = 'botbuster-iframe';
-                iframe.style.cssText = 'width: 100%; height: 700px; border: none; margin-top: 20px;';
-                
-                const src = `https://dev.botbuster.io/session_id=QC-12345&email=${encodeURIComponent(email)}&website_url=${loadedWebsiteUrl}&skin_type=${data.captcha_uid}&mfa=${hasEmailOption(data?.config?.mfa)}&user_activationstatus=${data?.config?.user_activationstatus}`;
-                
-                iframe.src = src;
-                container.appendChild(iframe); // Final injection
+                const existingIframe = document.getElementById('botbuster-iframe');
+                const newSrc = `https://dev.botbuster.io/session_id=QC-12345&email=${encodeURIComponent(email)}&website_url=${loadedWebsiteUrl}&skin_type=${data.captcha_uid}&mfa=${hasEmailOption(data?.config?.mfa)}&user_activationstatus=${data?.config?.user_activationstatus}`;
+
+                if (existingIframe) {
+                    // Update existing iframe SRC if it differs
+                    if (existingIframe.src !== newSrc) {
+                        existingIframe.src = newSrc;
+                    }
+                } else {
+                    // Fresh injection
+                    container.innerHTML = ''; 
+                    const iframe = document.createElement('iframe');
+                    iframe.id = 'botbuster-iframe';
+                    iframe.style.cssText = 'width: 100%; height: 700px; border: none; margin-top: 20px;';
+                    iframe.src = newSrc;
+                    container.appendChild(iframe);
+                }
                 
                 currentLoadedEmail = email;
             } else {
-                // If response code is not successful, remove any existing iframe and return
                 container.innerHTML = '';
-                return;
             }
         } catch (e) {
-            // 3. Handle network/CORS errors: clear and return
-            console.error('[Botbuster] Network failure. Aborting injection.', e);
             container.innerHTML = ''; 
-            return;
         }
     }
 
-    // --- MFA function -----
     function hasEmailOption(mfa) {
         if (!Array.isArray(mfa)) return false;
         return mfa.some(obj => {
             if (!obj || typeof obj !== 'object') return false;
-            if (Array.isArray(obj.options)) {
-                if (obj.options.some(opt => String(opt).toLowerCase() === 'email')) return true;
-            }
-            if (typeof obj.options === 'string' && obj.options.toLowerCase() === 'email') return true;
-            if (obj.email === true) return true;
-            return false;
+            const options = Array.isArray(obj.options) ? obj.options : [obj.options];
+            return options.some(opt => String(opt).toLowerCase() === 'email') || obj.email === true;
         });
     }
 
-    // --- Event Listeners ---
+    // Listener for real-time sync
     let timer;
     const handleInput = (e) => {
         const target = e.target;
-        if (!target) return;
-
         const isEmailField = (loadedEmailElement && target.id === loadedEmailElement) || 
-                             (target.id === 'email') ||
-                             (target.type === 'email') || 
-                             (target.name === 'email');
+                             (target.id === 'email') || (target.type === 'email');
 
         if (isEmailField) {
             clearTimeout(timer);
             timer = setTimeout(() => {
                 initSDK(target.value.trim());
-            }, 800);
+            }, 800); // Wait for user to pause typing
         }
     };
 
     document.addEventListener('input', handleInput, true);
-    document.addEventListener('change', handleInput, true);
 
-    // Initial check
-    if (initialEmail) {
-        initSDK(initialEmail);
-    }
-})();
+    if (initialEmail) initSDK(initialEmail);
+})(); 
