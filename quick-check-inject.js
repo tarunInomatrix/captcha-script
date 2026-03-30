@@ -23,6 +23,9 @@
         if (email === currentLoadedEmail) return; 
 
         try {
+            // OPTIONAL: Clear container immediately when a new request starts
+            // container.innerHTML = ''; 
+
             const res = await fetch('https://5znp405k6i.execute-api.eu-north-1.amazonaws.com/dev/initSDK', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -32,18 +35,19 @@
                 })
             });
 
-            // If 500 or any non-OK response, clear the iframe and exit
+            // If Server returns 500 (Internal Server Error)
             if (!res.ok) {
-                console.error(`[Botbuster] Error ${res.status}: Removing iframe.`);
-                container.innerHTML = ''; 
-                currentLoadedEmail = null; // Reset so it can try again if user fixes input
+                console.error(`[Botbuster] API Error ${res.status}: Cleaning up.`);
+                container.innerHTML = ''; // Force remove iframe
+                currentLoadedEmail = null; // Allow retry on next input
                 return;
             }
 
             const data = await res.json();
 
             if (data.code === "CONFIG_LOADED") {
-                container.innerHTML = ''; // Clear previous state
+                // SUCCESS: Inject Iframe
+                container.innerHTML = ''; 
 
                 const iframe = document.createElement('iframe');
                 iframe.id = 'botbuster-iframe';
@@ -56,12 +60,13 @@
                 
                 currentLoadedEmail = email;
             } else {
-                // If code is not CONFIG_LOADED, treat as error/inactive
+                // If any other code is returned, remove iframe
                 container.innerHTML = '';
             }
         } catch (e) {
-            console.error('[Botbuster] Network error: Removing iframe.', e);
-            container.innerHTML = ''; // Remove iframe on network failure
+            // Network/CORS errors
+            console.error('[Botbuster] Network failure: Removing iframe.');
+            container.innerHTML = ''; 
             currentLoadedEmail = null;
         }
     }
