@@ -1,9 +1,9 @@
 (function () {
     const currentScript = document.currentScript;
     const apiKey = currentScript.getAttribute('data-api-key');
-    const initialEmail = currentScript.getAttribute('data-email');
+    const initialEmail = currentScript.getAttribute('data-email'); 
     const loadedActionId = currentScript.getAttribute('data-action-id');
-    const loadedEmailElement = currentScript.getAttribute('data-email-element');
+    const loadedEmailElement = currentScript.getAttribute('data-email-element'); 
     const loadedWebsiteUrl = currentScript.getAttribute('data-web-url');
 
     let currentLoadedEmail = null; 
@@ -23,9 +23,6 @@
         if (email === currentLoadedEmail) return; 
 
         try {
-            // OPTIONAL: Clear container immediately when a new request starts
-            // container.innerHTML = ''; 
-
             const res = await fetch('https://5znp405k6i.execute-api.eu-north-1.amazonaws.com/dev/initSDK', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -35,20 +32,21 @@
                 })
             });
 
-            // If Server returns 500 (Internal Server Error)
+            // If 500 error or any failure, wipe the container and stop
             if (!res.ok) {
-                console.error(`[Botbuster] API Error ${res.status}: Cleaning up.`);
-                container.innerHTML = ''; // Force remove iframe
-                currentLoadedEmail = null; // Allow retry on next input
+                console.error(`[Botbuster] API Error ${res.status}: Removing iframe.`);
+                container.innerHTML = ''; 
+                currentLoadedEmail = null;
                 return;
             }
 
             const data = await res.json();
 
+            // SUCCESS BLOCK: Only create and show iframe here
             if (data.code === "CONFIG_LOADED") {
-                // SUCCESS: Inject Iframe
-                container.innerHTML = ''; 
+                container.innerHTML = ''; // Clear previous content
 
+                // Create the element only on success
                 const iframe = document.createElement('iframe');
                 iframe.id = 'botbuster-iframe';
                 iframe.style.cssText = 'width: 100%; height: 700px; border: none; margin-top: 20px;';
@@ -60,12 +58,11 @@
                 
                 currentLoadedEmail = email;
             } else {
-                // If any other code is returned, remove iframe
+                // If config is not loaded, ensure no iframe exists
                 container.innerHTML = '';
             }
         } catch (e) {
-            // Network/CORS errors
-            console.error('[Botbuster] Network failure: Removing iframe.');
+            console.error('[Botbuster] Network failure: Removing iframe.', e);
             container.innerHTML = ''; 
             currentLoadedEmail = null;
         }
