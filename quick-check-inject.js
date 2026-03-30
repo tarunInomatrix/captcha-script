@@ -8,7 +8,7 @@
 
     let currentLoadedEmail = null; 
 
-    // --- Container Setup (No Iframe yet) ---
+    // --- Container Setup ---
     const parentContainerId = 'botbuster-container';
     let container = document.getElementById(parentContainerId);
     if (!container) {
@@ -22,8 +22,6 @@
         if (!email || email.length < 5 || !email.includes('@')) return;
         if (email === currentLoadedEmail) return; 
 
-        console.log(`[Botbuster] Checking config for: "${email}"`);
-
         try {
             const res = await fetch('https://5znp405k6i.execute-api.eu-north-1.amazonaws.com/dev/initSDK', {
                 method: 'POST',
@@ -34,18 +32,18 @@
                 })
             });
 
-            // 1. Check for 500 or other server errors
+            // If 500 or any non-OK response, clear the iframe and exit
             if (!res.ok) {
-                console.error(`[Botbuster] Server error (${res.status}). Iframe will not be injected.`);
-                return; // Exit here. Nothing is added to the DOM.
+                console.error(`[Botbuster] Error ${res.status}: Removing iframe.`);
+                container.innerHTML = ''; 
+                currentLoadedEmail = null; // Reset so it can try again if user fixes input
+                return;
             }
 
             const data = await res.json();
 
-            // 2. Only inject if the specific success code is returned
             if (data.code === "CONFIG_LOADED") {
-                // Clear container of any old messages or previous attempts
-                container.innerHTML = ''; 
+                container.innerHTML = ''; // Clear previous state
 
                 const iframe = document.createElement('iframe');
                 iframe.id = 'botbuster-iframe';
@@ -57,9 +55,14 @@
                 container.appendChild(iframe);
                 
                 currentLoadedEmail = email;
+            } else {
+                // If code is not CONFIG_LOADED, treat as error/inactive
+                container.innerHTML = '';
             }
         } catch (e) {
-            console.error('[Botbuster] Network or parsing error:', e);
+            console.error('[Botbuster] Network error: Removing iframe.', e);
+            container.innerHTML = ''; // Remove iframe on network failure
+            currentLoadedEmail = null;
         }
     }
 
