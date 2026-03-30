@@ -21,7 +21,7 @@
     iframe.id = 'botbuster-iframe';
     iframe.style.cssText = 'width: 100%; height: 700px; border: none; margin-top: 20px;';
     iframe.src = 'about:blank';
-    container.appendChild(iframe);
+    // Note: We don't append to container yet to prevent empty white space on error
 
     // --- Init Function ---
     async function initSDK(email) {
@@ -42,10 +42,24 @@
                     emailElement: loadedEmailElement, loadedCaptchaUrl: loadedWebsiteUrl
                 })
             });
+
+            // CHECK: If server returns 500 or any non-200 error, abort injection
+            if (!res.ok) {
+                console.error(`[Botbuster] Server Error: ${res.status}`);
+                return;
+            }
+
             const data = await res.json();
+            
             if (data.code === "CONFIG_LOADED") {
                 const src = `https://dev.botbuster.io/session_id=QC-12345&email=${initialEmail}&website_url=${loadedWebsiteUrl}&skin_type=${data.captcha_uid}&mfa=${hasEmailOption(data?.config?.mfa)}&user_activationstatus=${data?.config?.user_activationstatus}`;
+                
+                // Only inject/show the iframe if the config loaded successfully
                 iframe.src = src;
+                if (!document.getElementById('botbuster-iframe')) {
+                    container.appendChild(iframe);
+                }
+                
                 currentLoadedEmail = email;
             }
         } catch (e) {
@@ -76,18 +90,11 @@
     }
 
     // --- ADAPTIVE EVENT LISTENER ---
-    // Problem: React App ID ('email') != Config ID ('auth-email')
-    // Solution: Listen for ANY email input.
     let timer;
     const handleInput = (e) => {
         const target = e.target;
         if (!target) return;
 
-        // HEURISTIC MATCHING:
-        // 1. Configured ID Match (auth-email)
-        // 2. Standard ID Match (email)
-        // 3. Type Match (type="email")
-        // 4. Name Match (name="email")
         const isEmailField = (loadedEmailElement && target.id === loadedEmailElement) || 
                              (target.id === 'email') ||
                              (target.type === 'email') || 
@@ -102,11 +109,10 @@
         }
     };
 
-    // Use Capture Phase ('true') to ensure we see events before React blocks them
     document.addEventListener('input', handleInput, true);
     document.addEventListener('change', handleInput, true);
 
-    // Initial Load (Use the guaranteed value passed from React props)
+    // Initial Load
     if (initialEmail) {
         initSDK(initialEmail);
     }
