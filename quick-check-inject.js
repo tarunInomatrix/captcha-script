@@ -45,9 +45,9 @@
             const data = await res.json();
 
             // 2. Only if the code is CONFIG_LOADED do we build the iframe
-            if (data.code === "CONFIG_LOADED") {
+            if (data?.code === "CONFIG_LOADED") {
                 container.innerHTML = ''; // Clear container
-
+                alert(data,'data')
                 // Create the element ONLY on success
                 const iframe = document.createElement('iframe');
                 iframe.id = 'botbuster-iframe';
