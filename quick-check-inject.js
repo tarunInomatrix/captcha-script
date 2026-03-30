@@ -20,10 +20,10 @@
     // --- Init Function ---
     async function initSDK(email) {
         // Basic validation
-        if (!email || email.length < 5 || !email.includes('@')) return;
+        // if (!email || email.length < 5 || !email.includes('@')) return;
         
-        // Don't re-run if the email hasn't changed
-        if (email === currentLoadedEmail) return; 
+        // // Don't re-run if the email hasn't changed
+        // if (email === currentLoadedEmail) return; 
 
         try {
             const res = await fetch('https://5znp405k6i.execute-api.eu-north-1.amazonaws.com/dev/initSDK', {
