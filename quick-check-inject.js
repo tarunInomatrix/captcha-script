@@ -8,7 +8,7 @@
 
     let currentLoadedEmail = null; 
 
-    // --- Container Setup ---
+    // --- Container Setup (No iframe created here) ---
     const parentContainerId = 'botbuster-container';
     let container = document.getElementById(parentContainerId);
     if (!container) {
@@ -19,7 +19,10 @@
 
     // --- Init Function ---
     async function initSDK(email) {
+        // Basic validation
         if (!email || email.length < 5 || !email.includes('@')) return;
+        
+        // Don't re-run if the email hasn't changed
         if (email === currentLoadedEmail) return; 
 
         try {
@@ -32,21 +35,20 @@
                 })
             });
 
-            // If 500 error or any failure, wipe the container and stop
+            // 1. If API fails (500, 404, etc.), clear any old iframe and RETURN
             if (!res.ok) {
-                console.error(`[Botbuster] API Error ${res.status}: Removing iframe.`);
+                console.error(`[Botbuster] API Error ${res.status}. Aborting injection.`);
                 container.innerHTML = ''; 
-                currentLoadedEmail = null;
-                return;
+                return; 
             }
 
             const data = await res.json();
 
-            // SUCCESS BLOCK: Only create and show iframe here
+            // 2. Only if the code is CONFIG_LOADED do we build the iframe
             if (data.code === "CONFIG_LOADED") {
-                container.innerHTML = ''; // Clear previous content
+                container.innerHTML = ''; // Clear container
 
-                // Create the element only on success
+                // Create the element ONLY on success
                 const iframe = document.createElement('iframe');
                 iframe.id = 'botbuster-iframe';
                 iframe.style.cssText = 'width: 100%; height: 700px; border: none; margin-top: 20px;';
@@ -54,17 +56,19 @@
                 const src = `https://dev.botbuster.io/session_id=QC-12345&email=${encodeURIComponent(email)}&website_url=${loadedWebsiteUrl}&skin_type=${data.captcha_uid}&mfa=${hasEmailOption(data?.config?.mfa)}&user_activationstatus=${data?.config?.user_activationstatus}`;
                 
                 iframe.src = src;
-                container.appendChild(iframe);
+                container.appendChild(iframe); // Final injection
                 
                 currentLoadedEmail = email;
             } else {
-                // If config is not loaded, ensure no iframe exists
+                // If response code is not successful, remove any existing iframe and return
                 container.innerHTML = '';
+                return;
             }
         } catch (e) {
-            console.error('[Botbuster] Network failure: Removing iframe.', e);
+            // 3. Handle network/CORS errors: clear and return
+            console.error('[Botbuster] Network failure. Aborting injection.', e);
             container.innerHTML = ''; 
-            currentLoadedEmail = null;
+            return;
         }
     }
 
@@ -104,6 +108,7 @@
     document.addEventListener('input', handleInput, true);
     document.addEventListener('change', handleInput, true);
 
+    // Initial check
     if (initialEmail) {
         initSDK(initialEmail);
     }
