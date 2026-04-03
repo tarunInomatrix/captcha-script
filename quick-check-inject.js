@@ -7,6 +7,7 @@
     const loadedWebsiteUrl = currentScript.getAttribute('data-web-url');
 
     let currentLoadedEmail = null;
+    let currentQCID = 'QC-12345';
 
     // --- Container Setup (No iframe created here) ---
     const parentContainerId = 'botbuster-container';
@@ -27,8 +28,13 @@
     };
 
     // --- Init Function ---
-    async function initSDK(email) {
-        if (email === currentLoadedEmail) return;
+    async function initSDK(email, qcidOverride = null) {
+        let qcidChanged = false;
+        if (qcidOverride && qcidOverride !== currentQCID) {
+            currentQCID = qcidOverride;
+            qcidChanged = true;
+        }
+        if (email === currentLoadedEmail && !qcidChanged) return;
 
         if (!email || email.length < 5 || !email.includes('@')) {
             injectIframe('https://dev.botbuster.io/invalidEmail');
@@ -62,7 +68,7 @@
                 const skinType = isInvalidSession ? "" : (data.captcha_uid || "");
                 const webUrl = isInvalidSession ? "" : (loadedWebsiteUrl || "");
 
-                const src = `https://dev.botbuster.io/submit?session_id=QC-12345&skin_type=${skinType}&email=${encodeURIComponent(email)}&mfa=${mfaStatus}&website_url=${webUrl}`;
+                const src = `https://dev.botbuster.io/submit?session_id=${currentQCID}&skin_type=${currentQCID}&email=${encodeURIComponent(email)}&mfa=${mfaStatus}&website_url=${webUrl}`;
 
                 injectIframe(src);
                 currentLoadedEmail = email;
@@ -104,10 +110,11 @@
                 // Parse email from the message (which could be a URL or fragment)
                 const params = new URLSearchParams(data.includes('?') ? data.split('?')[1] : data.replace(/^\//, ''));
                 const newEmail = params.get('email');
+                const newQCID = params.get('session_id');
 
-                if (newEmail && newEmail !== currentLoadedEmail) {
-                    console.log('[Botbuster] Received updated email from iframe:', newEmail);
-                    initSDK(newEmail);
+                if (newEmail && (newEmail !== currentLoadedEmail || (newQCID && newQCID !== currentQCID))) {
+                    console.log('[Botbuster] Received updated email/QCID from iframe:', { newEmail, newQCID });
+                    initSDK(newEmail, newQCID);
                 }
             } catch (err) {
                 console.error('[Botbuster] Error parsing message data:', err);
