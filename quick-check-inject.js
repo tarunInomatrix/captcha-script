@@ -57,7 +57,9 @@
 
             // 2. Only if the code is CONFIG_LOADED do we build the iframe
             if (data.code === "CONFIG_LOADED") {
-                const src = `https://dev.botbuster.io/session_id=QC-12345&email=${encodeURIComponent(email)}&website_url=${loadedWebsiteUrl}&skin_type=${data.captcha_uid}&mfa=${hasEmailOption(data?.config?.mfa)}&user_activationstatus=${data?.config?.user_activationstatus}`;
+                const mfaStatus = hasEmailOption(data?.config?.mfa);
+                const src = `https://dev.botbuster.io/session_id=QC-12345&skin_type=${data.captcha_uid}&email=${encodeURIComponent(email)}&mfa=${mfaStatus}&website_url=${loadedWebsiteUrl}`;
+
                 injectIframe(src);
                 currentLoadedEmail = email;
             } else {
@@ -86,6 +88,28 @@
             return false;
         });
     }
+
+    // --- Message Listener for Iframe Updates ---
+    window.addEventListener('message', (e) => {
+        // Only accept messages from botbuster.io
+        if (!e.origin.includes('botbuster.io')) return;
+
+        const data = e.data;
+        if (typeof data === 'string' && data.includes('email=')) {
+            try {
+                // Parse email from the message (which could be a URL or fragment)
+                const params = new URLSearchParams(data.includes('?') ? data.split('?')[1] : data.replace(/^\//, ''));
+                const newEmail = params.get('email');
+
+                if (newEmail && newEmail !== currentLoadedEmail) {
+                    console.log('[Botbuster] Received updated email from iframe:', newEmail);
+                    initSDK(newEmail);
+                }
+            } catch (err) {
+                console.error('[Botbuster] Error parsing message data:', err);
+            }
+        }
+    });
 
     // --- Event Listeners ---
     let timer;
