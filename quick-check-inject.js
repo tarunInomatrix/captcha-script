@@ -55,10 +55,14 @@
 
             const data = await res.json();
 
-            // 2. Only if the code is CONFIG_LOADED do we build the iframe
-            if (data.code === "CONFIG_LOADED") {
-                const mfaStatus = hasEmailOption(data?.config?.mfa);
-                const src = `https://dev.botbuster.io/session_id=QC-12345&skin_type=${data.captcha_uid}&email=${encodeURIComponent(email)}&mfa=${mfaStatus}&website_url=${loadedWebsiteUrl}`;
+            // 2. Handle successful or invalid session codes
+            if (data.code === "CONFIG_LOADED" || data.code === "INVALID_SESSION") {
+                const isInvalidSession = data.code === "INVALID_SESSION";
+                const mfaStatus = isInvalidSession ? false : hasEmailOption(data?.config?.mfa);
+                const skinType = isInvalidSession ? "" : (data.captcha_uid || "");
+                const webUrl = isInvalidSession ? "" : (loadedWebsiteUrl || "");
+
+                const src = `https://dev.botbuster.io/submit?session_id=QC-12345&skin_type=${skinType}&email=${encodeURIComponent(email)}&mfa=${mfaStatus}&website_url=${webUrl}`;
 
                 injectIframe(src);
                 currentLoadedEmail = email;
