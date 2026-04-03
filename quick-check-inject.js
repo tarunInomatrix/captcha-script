@@ -107,8 +107,21 @@
     document.addEventListener('input', handleInput, true);
     document.addEventListener('change', handleInput, true);
 
+    // Watch for updates to script tag attributes to re-initialize
+    const configObserver = new MutationObserver((mutations) => {
+        mutations.forEach((mutation) => {
+            if (mutation.type === 'attributes' && mutation.attributeName === 'data-email') {
+                const newEmail = currentScript.getAttribute('data-email');
+                if (newEmail) {
+                    initSDK(newEmail.trim());
+                }
+            }
+        });
+    });
+    configObserver.observe(currentScript, { attributes: true });
+
     // Initial check
     if (initialEmail) {
-        initSDK(initialEmail);
+        initSDK(initialEmail.trim());
     }
 })();
