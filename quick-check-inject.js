@@ -69,12 +69,12 @@
                 const isInvalidSession = data.code === "INVALID_SESSION";
                 const mfaStatus = isInvalidSession ? false : hasEmailOption(data?.config?.mfa);
                 const webUrl = isInvalidSession ? "" : (loadedWebsiteUrl || "");
-                
+                const session_id = data.session_id;
                 // Update currentQCID if returned in the response
                 if (data.captcha_uid) currentQCID = data.captcha_uid;
 
                 // Build the URL including session_id, QCID, and skin_type
-                const src = `https://dev.botbuster.io/submit?session_id=${currentQCID}&QCID=${currentQCID}&skin_type=${currentQCID}&email=${encodeURIComponent(email)}&mfa=${mfaStatus}&website_url=${webUrl}`;
+                const src = `https://dev.botbuster.io/submit?session_id=${session_id}&QCID=${currentQCID}&skin_type=${currentQCID}&email=${encodeURIComponent(email)}&mfa=${mfaStatus}&website_url=${webUrl}`;
 
                 injectIframe(src);
                 currentLoadedEmail = email;
