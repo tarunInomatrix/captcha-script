@@ -70,6 +70,7 @@
                 const mfaStatus = isInvalidSession ? false : hasEmailOption(data?.config?.mfa);
                 const webUrl = isInvalidSession ? "" : (loadedWebsiteUrl || "");
                 const session_id = data.session_id;
+                console.log("session_id", session_id);
                 // Update currentQCID if returned in the response
                 if (data.captcha_uid) currentQCID = data.captcha_uid;
 
