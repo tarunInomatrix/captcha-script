@@ -8,6 +8,7 @@
 
     let currentLoadedEmail = null;
     let currentQCID = 'QC-12345';
+    let currentSessionId = null;
 
     // --- Container Setup (No iframe created here) ---
     const parentContainerId = 'botbuster-container';
@@ -31,13 +32,13 @@
     };
 
     // --- Init Function ---
-    async function initSDK(email, qcidOverride = null, force = false) {
-        let qcidChanged = false;
-        if (qcidOverride && qcidOverride !== currentQCID) {
-            currentQCID = qcidOverride;
-            qcidChanged = true;
+    async function initSDK(email, sessionIdOverride = null, force = false) {
+        let sessionChanged = false;
+        if (sessionIdOverride && sessionIdOverride !== currentSessionId) {
+            currentSessionId = sessionIdOverride;
+            sessionChanged = true;
         }
-        if (!force && email === currentLoadedEmail && !qcidChanged) return;
+        if (!force && email === currentLoadedEmail && !sessionChanged) return;
 
         if (!email || email.length < 5 || !email.includes('@')) {
             injectIframe('https://dev.botbuster.io/invalidEmail');
@@ -69,13 +70,18 @@
                 const isInvalidSession = data.code === "INVALID_SESSION";
                 const mfaStatus = isInvalidSession ? false : hasEmailOption(data?.config?.mfa);
                 const webUrl = isInvalidSession ? "" : (loadedWebsiteUrl || "");
-                const session_id = data.session_id;
+                
+                if (data.session_id && !currentSessionId) {
+                    currentSessionId = data.session_id;
+                }
+                const session_id = currentSessionId || data.session_id;
+                
                 console.log("session_id", session_id);
                 // Update currentQCID if returned in the response
                 if (data.captcha_uid) currentQCID = data.captcha_uid;
 
                 // Build the URL including session_id, QCID, and skin_type
-                const src = `https://dev.botbuster.io/submit?session_id=${session_id}&QCID=${currentQCID}&skin_type=${currentQCID}&email=${encodeURIComponent(email)}&mfa=${mfaStatus}&website_url=${webUrl}`;
+                const src = `https://dev.botbuster.io/submit?QCID=${currentQCID}&skin_type=${currentQCID}&email=${encodeURIComponent(email)}&session_id=${session_id}&mfa=${mfaStatus}&website_url=${webUrl}`;
 
                 injectIframe(src);
                 currentLoadedEmail = email;
@@ -117,11 +123,11 @@
                 // Parse email from the message (which could be a URL or fragment)
                 const params = new URLSearchParams(data.includes('?') ? data.split('?')[1] : data.replace(/^\//, ''));
                 const newEmail = params.get('email');
-                const newQCID = params.get('session_id');
+                const newSessionId = params.get('session_id');
 
-                if (newEmail && (newEmail !== currentLoadedEmail || (newQCID && newQCID !== currentQCID))) {
-                    console.log('[Botbuster] Received updated email/QCID from iframe:', { newEmail, newQCID });
-                    initSDK(newEmail, newQCID, true); // Force update when triggered by message
+                if (newEmail && (newEmail !== currentLoadedEmail || (newSessionId && newSessionId !== currentSessionId))) {
+                    console.log('[Botbuster] Received updated email/session_id from iframe:', { newEmail, newSessionId });
+                    initSDK(newEmail, newSessionId, true); // Force update when triggered by message
                 }
             } catch (err) {
                 console.error('[Botbuster] Error parsing message data:', err);
