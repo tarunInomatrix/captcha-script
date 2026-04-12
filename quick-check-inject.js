@@ -19,6 +19,17 @@
         document.body.appendChild(container);
     }
 
+    const getDeviceType = () => {
+        const ua = navigator.userAgent;
+        if (/(tablet|ipad|playbook|silk)|(android(?!.*mobi))/i.test(ua)) {
+            return "tablet";
+        }
+        if (/Mobile|iP(hone|od)|Android|BlackBerry|IEMobile|Kindle|Silk-Accelerated|(hpw|web)OS|Opera M(obi|ini)/.test(ua)) {
+            return "phone";
+        }
+        return "desktop";
+    };
+
     const injectIframe = (src) => {
         const existingIframe = document.getElementById('botbuster-iframe');
         if (existingIframe && existingIframe.src === src) return;
@@ -52,13 +63,16 @@
         }
 
         try {
+            const deviceType = getDeviceType();
+            console.log("deviceType", deviceType);
             const res = await fetch('https://5znp405k6i.execute-api.eu-north-1.amazonaws.com/dev/initSDK', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     apiKey, email, actionId: loadedActionId,
                     emailElement: loadedEmailElement, loadedCaptchaUrl: loadedWebsiteUrl,
-                    session_id: currentSessionId
+                    session_id: currentSessionId,
+                    device_type: deviceType
                 })
             });
 
@@ -87,7 +101,7 @@
                 if (data.captcha_uid) currentQCID = data.captcha_uid;
 
                 // Build the URL including session_id, QCID, and skin_type
-                const src = `https://dev.botbuster.io/submit?QCID=${currentQCID}&skin_type=${currentQCID}&email=${email}&session_id=${session_id}&mfa=${mfaStatus}&website_url=${webUrl}`;
+                const src = `https://dev.botbuster.io/submit?QCID=${currentQCID}&skin_type=${currentQCID}&email=${email}&session_id=${session_id}&mfa=${mfaStatus}&website_url=${webUrl}&device_type=${deviceType}`;
 
                 injectIframe(src);
                 currentLoadedEmail = email;
