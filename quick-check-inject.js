@@ -35,8 +35,13 @@
     async function initSDK(email, sessionIdOverride = null, force = false) {
         let sessionChanged = false;
         if (sessionIdOverride && sessionIdOverride !== currentSessionId) {
-            currentSessionId = sessionIdOverride;
-            sessionChanged = true;
+            // Prevent overriding a valid session_id with a QCID placeholder like QC-12345
+            if (!sessionIdOverride.startsWith('QC-')) {
+                currentSessionId = sessionIdOverride;
+                sessionChanged = true;
+            } else {
+                console.warn('[Botbuster] Ignoring erroneous session_id override from iframe:', sessionIdOverride);
+            }
         }
         if (!force && email === currentLoadedEmail && !sessionChanged) return;
 
@@ -52,7 +57,8 @@
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     apiKey, email, actionId: loadedActionId,
-                    emailElement: loadedEmailElement, loadedCaptchaUrl: loadedWebsiteUrl
+                    emailElement: loadedEmailElement, loadedCaptchaUrl: loadedWebsiteUrl,
+                    session_id: currentSessionId
                 })
             });
 
@@ -70,18 +76,18 @@
                 const isInvalidSession = data.code === "INVALID_SESSION";
                 const mfaStatus = isInvalidSession ? false : hasEmailOption(data?.config?.mfa);
                 const webUrl = isInvalidSession ? "" : (loadedWebsiteUrl || "");
-                
+
                 if (data.session_id && !currentSessionId) {
                     currentSessionId = data.session_id;
                 }
                 const session_id = currentSessionId || data.session_id;
-                
+
                 console.log("session_id", session_id);
                 // Update currentQCID if returned in the response
                 if (data.captcha_uid) currentQCID = data.captcha_uid;
 
                 // Build the URL including session_id, QCID, and skin_type
-                const src = `https://dev.botbuster.io/submit?QCID=${currentQCID}&skin_type=${currentQCID}&email=${encodeURIComponent(email)}&session_id=${session_id}&mfa=${mfaStatus}&website_url=${webUrl}`;
+                const src = `https://dev.botbuster.io/submit?QCID=${currentQCID}&skin_type=${currentQCID}&email=${email}&session_id=${session_id}&mfa=${mfaStatus}&website_url=${webUrl}`;
 
                 injectIframe(src);
                 currentLoadedEmail = email;
