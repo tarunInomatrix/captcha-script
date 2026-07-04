@@ -62,60 +62,14 @@
             return;
         }
 
-        try {
-            const deviceType = getDeviceType();
-            console.log("deviceType", deviceType);
-            const res = await fetch('https://5znp405k6i.execute-api.eu-north-1.amazonaws.com/dev/initSDK', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    apiKey, email, actionId: loadedActionId,
-                    emailElement: loadedEmailElement, loadedCaptchaUrl: loadedWebsiteUrl,
-                    session_id: currentSessionId,
-                    device_type: deviceType
-                })
-            });
+        const deviceType = getDeviceType();
+        console.log("deviceType", deviceType);
+        const session_id = currentSessionId || "";
 
-            // 1. If API fails (500, 404, etc.), clear any old iframe and RETURN
-            if (!res.ok) {
-                console.error(`[Botbuster] API Error ${res.status}. Aborting injection.`);
-                container.innerHTML = '';
-                return;
-            }
+        const src = `https://dev.botbuster.io/submit?actionId=${encodeURIComponent(loadedActionId || '')}&apiKey=${encodeURIComponent(apiKey || '')}&device_type=${encodeURIComponent(deviceType)}&email=${encodeURIComponent(email)}&emailElement=${encodeURIComponent(loadedEmailElement || '')}&loadedCaptchaUrl=${encodeURIComponent(loadedWebsiteUrl || '')}&session_id=${encodeURIComponent(session_id)}`;
 
-            const data = await res.json();
-
-            // 2. Handle successful or invalid session codes
-            if (data.code === "CONFIG_LOADED" || data.code === "INVALID_SESSION") {
-                const isInvalidSession = data.code === "INVALID_SESSION";
-                const mfaStatus = isInvalidSession ? false : hasEmailOption(data?.config?.mfa);
-                const webUrl = isInvalidSession ? "" : (loadedWebsiteUrl || "");
-
-                if (data.session_id && !currentSessionId) {
-                    currentSessionId = data.session_id;
-                }
-                const session_id = currentSessionId || data.session_id;
-
-                console.log("session_id", session_id);
-                // Update currentQCID if returned in the response
-                if (data.captcha_uid) currentQCID = data.captcha_uid;
-
-                // Build the URL including session_id, QCID, and skin_type
-                const src = `https://dev.botbuster.io/submit?QCID=${currentQCID}&skin_type=${currentQCID}&email=${email}&session_id=${session_id}&mfa=${mfaStatus}&website_url=${webUrl}&device_type=${deviceType}`;
-
-                injectIframe(src);
-                currentLoadedEmail = email;
-            } else {
-                // If response code is not successful, remove any existing iframe and return
-                container.innerHTML = '';
-                return;
-            }
-        } catch (e) {
-            // 3. Handle network/CORS errors: clear and return
-            console.error('[Botbuster] Network failure. Aborting injection.', e);
-            container.innerHTML = '';
-            return;
-        }
+        injectIframe(src);
+        currentLoadedEmail = email;
     }
 
     // --- MFA function -----
