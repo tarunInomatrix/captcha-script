@@ -9,6 +9,7 @@
     let currentLoadedEmail = null;
     let currentQCID = 'QC-12345';
     let currentSessionId = null;
+    let removalTimer = null;
 
     // --- Container Setup (No iframe created here) ---
     const parentContainerId = 'botbuster-container';
@@ -30,6 +31,23 @@
         return "desktop";
     };
 
+    const removeIframe = () => {
+        const iframe = document.getElementById('botbuster-iframe');
+        if (iframe) {
+            console.log('[Botbuster] Executing iframe removal.');
+            iframe.remove();
+        }
+    };
+
+    const scheduleRemoval = () => {
+        if (removalTimer) return; // Prevent multiple timers
+        console.log('[Botbuster] Submission detected. Removing iframe in 2 seconds...');
+        removalTimer = setTimeout(() => {
+            removeIframe();
+            removalTimer = null;
+        }, 2000);
+    };
+
     const injectIframe = (src) => {
         const existingIframe = document.getElementById('botbuster-iframe');
         if (existingIframe && existingIframe.src === src) return;
@@ -39,14 +57,25 @@
         iframe.id = 'botbuster-iframe';
         iframe.style.cssText = 'width: 100%; height: 700px; border: none; margin-top: 20px;';
         iframe.src = src;
-        container.appendChild(iframe);
-    };
 
-    const removeIframe = () => {
-        const iframe = document.getElementById('botbuster-iframe');
-        if (iframe) {
-            iframe.remove();
-        }
+        // --- URL Change Detector ---
+        iframe.addEventListener('load', () => {
+            try {
+                // Try reading iframe's current window URL (Works if same origin)
+                const currentIframeUrl = iframe.contentWindow.location.href;
+                if (currentIframeUrl.includes('/qc-submitted')) {
+                    scheduleRemoval();
+                }
+            } catch (err) {
+                // Cross-origin restriction will trigger this catch block if the iframe navigated
+                // Check if the assigned iframe src property itself changed to include /qc-submitted
+                if (iframe.src && iframe.src.includes('/qc-submitted')) {
+                    scheduleRemoval();
+                }
+            }
+        });
+
+        container.appendChild(iframe);
     };
 
     // --- Init Function ---
@@ -112,12 +141,9 @@
             }
         }
 
-        // Check for submission completion
+        // Check for submission completion via message
         if (messageString.includes('/qc-submitted')) {
-            console.log('[Botbuster] QC Submitted detected. Removing iframe in 2 seconds...');
-            setTimeout(() => {
-                removeIframe();
-            }, 2000);
+            scheduleRemoval();
             return;
         }
 
