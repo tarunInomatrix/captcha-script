@@ -100,11 +100,20 @@
 
         const data = e.data;
 
-        // Remove iframe 2 seconds after receiving /qc-submitted message
-        if (
-            (typeof data === 'string' && data.includes('/qc-submitted')) ||
-            (data && typeof data === 'object' && JSON.stringify(data).includes('/qc-submitted'))
-        ) {
+        // Parse message safely as string regardless of data format
+        let messageString = '';
+        if (typeof data === 'string') {
+            messageString = data;
+        } else if (data && typeof data === 'object') {
+            try {
+                messageString = JSON.stringify(data);
+            } catch (err) {
+                console.error('[Botbuster] Error stringifying message object:', err);
+            }
+        }
+
+        // Check for submission completion
+        if (messageString.includes('/qc-submitted')) {
             console.log('[Botbuster] QC Submitted detected. Removing iframe in 2 seconds...');
             setTimeout(() => {
                 removeIframe();
@@ -112,10 +121,14 @@
             return;
         }
 
-        if (typeof data === 'string' && data.includes('email=')) {
+        // Handle email / session parameter updates
+        if (messageString.includes('email=')) {
             try {
-                // Parse email from the message (which could be a URL or fragment)
-                const params = new URLSearchParams(data.includes('?') ? data.split('?')[1] : data.replace(/^\//, ''));
+                const searchStr = messageString.includes('?') 
+                    ? messageString.split('?')[1] 
+                    : messageString.replace(/^\//, '');
+
+                const params = new URLSearchParams(searchStr);
                 const newEmail = params.get('email');
                 const newSessionId = params.get('session_id');
 
