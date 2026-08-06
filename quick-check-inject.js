@@ -58,20 +58,26 @@
         iframe.style.cssText = 'width: 100%; height: 700px; border: none; margin-top: 20px;';
         iframe.src = src;
 
+        console.log('[Botbuster] Injecting iframe with initial URL:', src);
+
         // --- URL Change Detector ---
         iframe.addEventListener('load', () => {
+            let detectedUrl = null;
+
             try {
-                // Try reading iframe's current window URL (Works if same origin)
-                const currentIframeUrl = iframe.contentWindow.location.href;
-                if (currentIframeUrl.includes('/qc-submitted')) {
-                    scheduleRemoval();
-                }
+                // Try reading internal iframe URL
+                detectedUrl = iframe.contentWindow.location.href;
+                console.log('[Botbuster] Iframe loaded / URL changed:', detectedUrl);
             } catch (err) {
-                // Cross-origin restriction will trigger this catch block if the iframe navigated
-                // Check if the assigned iframe src property itself changed to include /qc-submitted
-                if (iframe.src && iframe.src.includes('/qc-submitted')) {
-                    scheduleRemoval();
-                }
+                // Handle Cross-Origin restriction
+                detectedUrl = iframe.src;
+                console.log('[Botbuster] Iframe loaded (Cross-Origin restricted). Current iframe attribute src:', detectedUrl);
+            }
+
+            // Check if URL matches submission target
+            if (detectedUrl && detectedUrl.includes('/qc-submitted')) {
+                console.log('[Botbuster] Detected "/qc-submitted" in iframe URL load event.');
+                scheduleRemoval();
             }
         });
 
@@ -141,8 +147,11 @@
             }
         }
 
+        console.log('[Botbuster] Received postMessage from iframe:', messageString);
+
         // Check for submission completion via message
         if (messageString.includes('/qc-submitted')) {
+            console.log('[Botbuster] Detected "/qc-submitted" in postMessage.');
             scheduleRemoval();
             return;
         }
