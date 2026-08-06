@@ -75,8 +75,8 @@
             }
 
             // Check if URL matches submission target
-            if (detectedUrl && detectedUrl.includes('/qc-submitted')) {
-                console.log('[Botbuster] Detected "/qc-submitted" in iframe URL load event.');
+            if (detectedUrl && (detectedUrl.includes('/qc-submitted') || detectedUrl.includes('BOTBUSTER_SUCCESS'))) {
+                console.log('[Botbuster] Detected success state in iframe URL load event.');
                 scheduleRemoval();
             }
         });
@@ -105,27 +105,13 @@
         }
 
         const deviceType = getDeviceType();
-        console.log("deviceType", deviceType);
+        console.log("[Botbuster] deviceType", deviceType);
         const session_id = currentSessionId || "";
 
         const src = `https://dev.botbuster.io/submit?actionId=${encodeURIComponent(loadedActionId || '')}&apiKey=${encodeURIComponent(apiKey || '')}&device_type=${encodeURIComponent(deviceType)}&email=${encodeURIComponent(email)}&emailElement=${encodeURIComponent(loadedEmailElement || '')}&loadedCaptchaUrl=${encodeURIComponent(loadedWebsiteUrl || '')}&session_id=${encodeURIComponent(session_id)}`;
 
         injectIframe(src);
         currentLoadedEmail = email;
-    }
-
-    // --- MFA function -----
-    function hasEmailOption(mfa) {
-        if (!Array.isArray(mfa)) return false;
-        return mfa.some(obj => {
-            if (!obj || typeof obj !== 'object') return false;
-            if (Array.isArray(obj.options)) {
-                if (obj.options.some(opt => String(opt).toLowerCase() === 'email')) return true;
-            }
-            if (typeof obj.options === 'string' && obj.options.toLowerCase() === 'email') return true;
-            if (obj.email === true) return true;
-            return false;
-        });
     }
 
     // --- Message Listener for Iframe Updates ---
@@ -149,9 +135,9 @@
 
         console.log('[Botbuster] Received postMessage from iframe:', messageString);
 
-        // Check for submission completion via message
-        if (messageString.includes('/qc-submitted')) {
-            console.log('[Botbuster] Detected "/qc-submitted" in postMessage.');
+        // --- THE FIX: Check for the exact success string sent by your app ---
+        if (messageString.includes('BOTBUSTER_SUCCESS') || messageString.includes('/qc-submitted')) {
+            console.log('[Botbuster] Detected SUCCESS state in postMessage.');
             scheduleRemoval();
             return;
         }
