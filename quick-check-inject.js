@@ -42,6 +42,13 @@
         container.appendChild(iframe);
     };
 
+    const removeIframe = () => {
+        const iframe = document.getElementById('botbuster-iframe');
+        if (iframe) {
+            iframe.remove();
+        }
+    };
+
     // --- Init Function ---
     async function initSDK(email, sessionIdOverride = null, force = false) {
         let sessionChanged = false;
@@ -92,6 +99,17 @@
         if (!e.origin.includes('botbuster.io')) return;
 
         const data = e.data;
+
+        // Remove iframe if completion message or URL path /completions is triggered
+        if (
+            (typeof data === 'string' && data.includes('/completions')) ||
+            (data && typeof data === 'object' && JSON.stringify(data).includes('/completions'))
+        ) {
+            console.log('[Botbuster] Completion detected. Removing iframe.');
+            removeIframe();
+            return;
+        }
+
         if (typeof data === 'string' && data.includes('email=')) {
             try {
                 // Parse email from the message (which could be a URL or fragment)
