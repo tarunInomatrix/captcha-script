@@ -100,13 +100,15 @@
 
         const data = e.data;
 
-        // Remove iframe if completion message or URL path /completions is triggered
+        // Remove iframe 2 seconds after receiving /qc-submitted message
         if (
-            (typeof data === 'string' && data.includes('/completions')) ||
-            (data && typeof data === 'object' && JSON.stringify(data).includes('/completions'))
+            (typeof data === 'string' && data.includes('/qc-submitted')) ||
+            (data && typeof data === 'object' && JSON.stringify(data).includes('/qc-submitted'))
         ) {
-            console.log('[Botbuster] Completion detected. Removing iframe.');
-            removeIframe();
+            console.log('[Botbuster] QC Submitted detected. Removing iframe in 2 seconds...');
+            setTimeout(() => {
+                removeIframe();
+            }, 2000);
             return;
         }
 
