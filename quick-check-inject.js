@@ -9,7 +9,10 @@
     let currentLoadedEmail = null;
     let currentQCID = 'QC-12345';
     let currentSessionId = null;
+    
     let removalTimer = null;
+    let inactivityTimer = null;
+    const INACTIVITY_LIMIT_MS = 10 * 60 * 1000; // 10 minutes in milliseconds
 
     // --- Container Setup (No iframe created here) ---
     const parentContainerId = 'botbuster-container';
@@ -31,11 +34,15 @@
         return "desktop";
     };
 
-    const removeIframe = () => {
+    const removeIframe = (reason = 'standard') => {
         const iframe = document.getElementById('botbuster-iframe');
         if (iframe) {
-            console.log('[Botbuster] Executing iframe removal.');
+            console.log(`[Botbuster] Executing iframe removal. Reason: ${reason}`);
             iframe.remove();
+        }
+        if (inactivityTimer) {
+            clearTimeout(inactivityTimer);
+            inactivityTimer = null;
         }
     };
 
@@ -43,9 +50,18 @@
         if (removalTimer) return; // Prevent multiple timers
         console.log('[Botbuster] Submission detected. Removing iframe in 2 seconds...');
         removalTimer = setTimeout(() => {
-            removeIframe();
+            removeIframe('success_completion');
             removalTimer = null;
         }, 2000);
+    };
+
+    const resetInactivityTimer = () => {
+        if (inactivityTimer) {
+            clearTimeout(inactivityTimer);
+        }
+        inactivityTimer = setTimeout(() => {
+            removeIframe('10_minutes_inactivity');
+        }, INACTIVITY_LIMIT_MS);
     };
 
     const injectIframe = (src) => {
@@ -82,6 +98,9 @@
         });
 
         container.appendChild(iframe);
+        
+        // Start the 10-minute countdown when the iframe is injected
+        resetInactivityTimer();
     };
 
     // --- Init Function ---
@@ -114,10 +133,27 @@
         currentLoadedEmail = email;
     }
 
+    // --- MFA function -----
+    function hasEmailOption(mfa) {
+        if (!Array.isArray(mfa)) return false;
+        return mfa.some(obj => {
+            if (!obj || typeof obj !== 'object') return false;
+            if (Array.isArray(obj.options)) {
+                if (obj.options.some(opt => String(opt).toLowerCase() === 'email')) return true;
+            }
+            if (typeof obj.options === 'string' && obj.options.toLowerCase() === 'email') return true;
+            if (obj.email === true) return true;
+            return false;
+        });
+    }
+
     // --- Message Listener for Iframe Updates ---
     window.addEventListener('message', (e) => {
         // Only accept messages from botbuster.io
         if (!e.origin.includes('botbuster.io')) return;
+
+        // Reset inactivity timer on any communication from the iframe
+        resetInactivityTimer();
 
         const data = e.data;
 
@@ -135,7 +171,7 @@
 
         console.log('[Botbuster] Received postMessage from iframe:', messageString);
 
-        // --- THE FIX: Check for the exact success string sent by your app ---
+        // Check for the exact success string sent by your app
         if (messageString.includes('BOTBUSTER_SUCCESS') || messageString.includes('/qc-submitted')) {
             console.log('[Botbuster] Detected SUCCESS state in postMessage.');
             scheduleRemoval();
@@ -175,6 +211,9 @@
             (target.name === 'email');
 
         if (isEmailField) {
+            // Reset inactivity timer when the user interacts with the email input
+            resetInactivityTimer();
+            
             clearTimeout(timer);
             timer = setTimeout(() => {
                 initSDK(target.value.trim());
