@@ -1,19 +1,20 @@
 (function () {
     const currentScript = document.currentScript;
-    const apiKey = currentScript.getAttribute('data-api-key');
-    const initialEmail = currentScript.getAttribute('data-email');
-    const loadedActionId = currentScript.getAttribute('data-action-id');
-    const loadedEmailElement = currentScript.getAttribute('data-email-element');
-    const loadedWebsiteUrl = currentScript.getAttribute('data-web-url');
+    let apiKey = currentScript ? currentScript.getAttribute('data-api-key') : '';
+    let initialEmail = currentScript ? currentScript.getAttribute('data-email') : '';
+    let loadedActionId = currentScript ? currentScript.getAttribute('data-action-id') : '';
+    let loadedEmailElement = currentScript ? currentScript.getAttribute('data-email-element') : '';
+    let loadedWebsiteUrl = currentScript ? currentScript.getAttribute('data-web-url') : '';
 
     let currentLoadedEmail = null;
     let currentQCID = 'QC-12345';
     let currentSessionId = null;
-    
+
     let removalTimer = null;
     let inactivityTimer = null;
     const INACTIVITY_LIMIT_MS = 10 * 60 * 1000; // 10 minutes
 
+    // --- Container Setup ---
     const parentContainerId = 'botbuster-container';
     let container = document.getElementById(parentContainerId);
     if (!container) {
@@ -38,6 +39,17 @@
         if (inactivityTimer) {
             clearTimeout(inactivityTimer);
             inactivityTimer = null;
+        }
+    };
+
+    const triggerSuccessCallback = () => {
+        if (typeof window.onBotbusterSuccess === 'function') {
+            console.log('[Botbuster] Triggering frontend onBotbusterSuccess callback.');
+            window.onBotbusterSuccess();
+            // Optional: reset after execution so it doesn't fire twice
+            window.onBotbusterSuccess = null;
+        } else {
+            console.warn('[Botbuster] Captcha completed, but window.onBotbusterSuccess was not defined.');
         }
     };
 
@@ -67,6 +79,8 @@
         iframe.style.cssText = 'width: 100%; height: 700px; border: none; margin-top: 20px;';
         iframe.src = src;
 
+        console.log('[Botbuster] Injecting iframe with URL:', src);
+
         iframe.addEventListener('load', () => {
             let detectedUrl = null;
             try {
@@ -74,6 +88,7 @@
             } catch (err) {
                 detectedUrl = iframe.src;
             }
+
             if (detectedUrl && (detectedUrl.includes('/qc-submitted') || detectedUrl.includes('BOTBUSTER_SUCCESS'))) {
                 triggerSuccessCallback();
                 scheduleRemoval();
@@ -84,23 +99,26 @@
         resetInactivityTimer();
     };
 
-    // Helper to safely trigger the frontend callback passed via window object
-    const triggerSuccessCallback = () => {
-        if (typeof window.onBotbusterSuccess === 'function') {
-            console.log('[Botbuster] Triggering frontend onSuccess callback.');
-            window.onBotbusterSuccess();
-            window.onBotbusterSuccess = null; // Clean up after execution
-        }
-    };
-
+    // --- Init Function Exposed Globally ---
     async function initSDK(email, sessionIdOverride = null, force = false) {
         let sessionChanged = false;
+
+        // Refresh dynamic attributes from script element if modified by React
+        const scriptElem = document.getElementById('botbuster-script');
+        if (scriptElem) {
+            apiKey = scriptElem.getAttribute('data-api-key') || apiKey;
+            loadedActionId = scriptElem.getAttribute('data-action-id') || loadedActionId;
+            loadedEmailElement = scriptElem.getAttribute('data-email-element') || loadedEmailElement;
+            loadedWebsiteUrl = scriptElem.getAttribute('data-web-url') || loadedWebsiteUrl;
+        }
+
         if (sessionIdOverride && sessionIdOverride !== currentSessionId) {
             if (!sessionIdOverride.startsWith('QC-')) {
                 currentSessionId = sessionIdOverride;
                 sessionChanged = true;
             }
         }
+
         if (!force && email === currentLoadedEmail && !sessionChanged) return;
 
         if (!email || email.length < 5 || !email.includes('@')) {
@@ -118,21 +136,29 @@
         currentLoadedEmail = email;
     }
 
-    // --- Message Listener ---
+    // Expose initSDK globally so React can re-initialize if script already exists
+    window.initBotbusterSDK = initSDK;
+
+    // --- Message Listener for Iframe Updates ---
     window.addEventListener('message', (e) => {
         if (!e.origin.includes('botbuster.io')) return;
         resetInactivityTimer();
 
         const data = e.data;
         let messageString = '';
-        
+
         if (typeof data === 'string') {
             messageString = data;
         } else if (data && typeof data === 'object') {
-            try { messageString = JSON.stringify(data); } catch (err) {}
+            try {
+                messageString = JSON.stringify(data);
+            } catch (err) {
+                console.error('[Botbuster] Error stringifying message object:', err);
+            }
         }
 
-        // --- SUCCESS TRIGGER ---
+        console.log('[Botbuster] Received postMessage from iframe:', messageString);
+
         if (messageString.includes('BOTBUSTER_SUCCESS') || messageString.includes('/qc-submitted')) {
             console.log('[Botbuster] Detected SUCCESS state in postMessage.');
             triggerSuccessCallback();
@@ -142,7 +168,10 @@
 
         if (messageString.includes('email=')) {
             try {
-                const searchStr = messageString.includes('?') ? messageString.split('?')[1] : messageString.replace(/^\//, '');
+                const searchStr = messageString.includes('?') 
+                    ? messageString.split('?')[1] 
+                    : messageString.replace(/^\//, '');
+
                 const params = new URLSearchParams(searchStr);
                 const newEmail = params.get('email');
                 const newSessionId = params.get('session_id');
@@ -150,28 +179,36 @@
                 if (newEmail && (newEmail !== currentLoadedEmail || (newSessionId && newSessionId !== currentSessionId))) {
                     initSDK(newEmail, newSessionId, true);
                 }
-            } catch (err) {}
+            } catch (err) {
+                console.error('[Botbuster] Error parsing message data:', err);
+            }
         }
     });
 
+    // --- Event Listeners ---
     let timer;
     const handleInput = (e) => {
         const target = e.target;
         if (!target) return;
 
         const isEmailField = (loadedEmailElement && target.id === loadedEmailElement) ||
-            (target.id === 'email') || (target.type === 'email') || (target.name === 'email');
+            (target.id === 'email') ||
+            (target.type === 'email') ||
+            (target.name === 'email');
 
         if (isEmailField) {
             resetInactivityTimer();
             clearTimeout(timer);
-            timer = setTimeout(() => { initSDK(target.value.trim()); }, 800);
+            timer = setTimeout(() => {
+                initSDK(target.value.trim());
+            }, 800);
         }
     };
 
     document.addEventListener('input', handleInput, true);
     document.addEventListener('change', handleInput, true);
 
+    // Initial check
     if (initialEmail) {
         initSDK(initialEmail);
     }
