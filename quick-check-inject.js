@@ -12,9 +12,8 @@
     
     let removalTimer = null;
     let inactivityTimer = null;
-    const INACTIVITY_LIMIT_MS = 10 * 60 * 1000; // 10 minutes in milliseconds
+    const INACTIVITY_LIMIT_MS = 10 * 60 * 1000; // 10 minutes
 
-    // --- Container Setup (No iframe created here) ---
     const parentContainerId = 'botbuster-container';
     let container = document.getElementById(parentContainerId);
     if (!container) {
@@ -25,12 +24,8 @@
 
     const getDeviceType = () => {
         const ua = navigator.userAgent;
-        if (/(tablet|ipad|playbook|silk)|(android(?!.*mobi))/i.test(ua)) {
-            return "tablet";
-        }
-        if (/Mobile|iP(hone|od)|Android|BlackBerry|IEMobile|Kindle|Silk-Accelerated|(hpw|web)OS|Opera M(obi|ini)/.test(ua)) {
-            return "phone";
-        }
+        if (/(tablet|ipad|playbook|silk)|(android(?!.*mobi))/i.test(ua)) return "tablet";
+        if (/Mobile|iP(hone|od)|Android|BlackBerry|IEMobile|Kindle|Silk-Accelerated|(hpw|web)OS|Opera M(obi|ini)/.test(ua)) return "phone";
         return "desktop";
     };
 
@@ -47,7 +42,7 @@
     };
 
     const scheduleRemoval = () => {
-        if (removalTimer) return; // Prevent multiple timers
+        if (removalTimer) return;
         console.log('[Botbuster] Submission detected. Removing iframe in 2 seconds...');
         removalTimer = setTimeout(() => {
             removeIframe('success_completion');
@@ -56,9 +51,7 @@
     };
 
     const resetInactivityTimer = () => {
-        if (inactivityTimer) {
-            clearTimeout(inactivityTimer);
-        }
+        if (inactivityTimer) clearTimeout(inactivityTimer);
         inactivityTimer = setTimeout(() => {
             removeIframe('10_minutes_inactivity');
         }, INACTIVITY_LIMIT_MS);
@@ -74,45 +67,38 @@
         iframe.style.cssText = 'width: 100%; height: 700px; border: none; margin-top: 20px;';
         iframe.src = src;
 
-        console.log('[Botbuster] Injecting iframe with initial URL:', src);
-
-        // --- URL Change Detector ---
         iframe.addEventListener('load', () => {
             let detectedUrl = null;
-
             try {
-                // Try reading internal iframe URL
                 detectedUrl = iframe.contentWindow.location.href;
-                console.log('[Botbuster] Iframe loaded / URL changed:', detectedUrl);
             } catch (err) {
-                // Handle Cross-Origin restriction
                 detectedUrl = iframe.src;
-                console.log('[Botbuster] Iframe loaded (Cross-Origin restricted). Current iframe attribute src:', detectedUrl);
             }
-
-            // Check if URL matches submission target
             if (detectedUrl && (detectedUrl.includes('/qc-submitted') || detectedUrl.includes('BOTBUSTER_SUCCESS'))) {
-                console.log('[Botbuster] Detected success state in iframe URL load event.');
+                triggerSuccessCallback();
                 scheduleRemoval();
             }
         });
 
         container.appendChild(iframe);
-        
-        // Start the 10-minute countdown when the iframe is injected
         resetInactivityTimer();
     };
 
-    // --- Init Function ---
+    // Helper to safely trigger the frontend callback passed via window object
+    const triggerSuccessCallback = () => {
+        if (typeof window.onBotbusterSuccess === 'function') {
+            console.log('[Botbuster] Triggering frontend onSuccess callback.');
+            window.onBotbusterSuccess();
+            window.onBotbusterSuccess = null; // Clean up after execution
+        }
+    };
+
     async function initSDK(email, sessionIdOverride = null, force = false) {
         let sessionChanged = false;
         if (sessionIdOverride && sessionIdOverride !== currentSessionId) {
-            // Prevent overriding a valid session_id with a QCID placeholder like QC-12345
             if (!sessionIdOverride.startsWith('QC-')) {
                 currentSessionId = sessionIdOverride;
                 sessionChanged = true;
-            } else {
-                console.warn('[Botbuster] Ignoring erroneous session_id override from iframe:', sessionIdOverride);
             }
         }
         if (!force && email === currentLoadedEmail && !sessionChanged) return;
@@ -124,7 +110,6 @@
         }
 
         const deviceType = getDeviceType();
-        console.log("[Botbuster] deviceType", deviceType);
         const session_id = currentSessionId || "";
 
         const src = `https://dev.botbuster.io/submit?actionId=${encodeURIComponent(loadedActionId || '')}&apiKey=${encodeURIComponent(apiKey || '')}&device_type=${encodeURIComponent(deviceType)}&email=${encodeURIComponent(email)}&emailElement=${encodeURIComponent(loadedEmailElement || '')}&loadedCaptchaUrl=${encodeURIComponent(loadedWebsiteUrl || '')}&session_id=${encodeURIComponent(session_id)}`;
@@ -133,98 +118,60 @@
         currentLoadedEmail = email;
     }
 
-    // --- MFA function -----
-    function hasEmailOption(mfa) {
-        if (!Array.isArray(mfa)) return false;
-        return mfa.some(obj => {
-            if (!obj || typeof obj !== 'object') return false;
-            if (Array.isArray(obj.options)) {
-                if (obj.options.some(opt => String(opt).toLowerCase() === 'email')) return true;
-            }
-            if (typeof obj.options === 'string' && obj.options.toLowerCase() === 'email') return true;
-            if (obj.email === true) return true;
-            return false;
-        });
-    }
-
-    // --- Message Listener for Iframe Updates ---
+    // --- Message Listener ---
     window.addEventListener('message', (e) => {
-        // Only accept messages from botbuster.io
         if (!e.origin.includes('botbuster.io')) return;
-
-        // Reset inactivity timer on any communication from the iframe
         resetInactivityTimer();
 
         const data = e.data;
-
-        // Parse message safely as string regardless of data format
         let messageString = '';
+        
         if (typeof data === 'string') {
             messageString = data;
         } else if (data && typeof data === 'object') {
-            try {
-                messageString = JSON.stringify(data);
-            } catch (err) {
-                console.error('[Botbuster] Error stringifying message object:', err);
-            }
+            try { messageString = JSON.stringify(data); } catch (err) {}
         }
 
-        console.log('[Botbuster] Received postMessage from iframe:', messageString);
-
-        // Check for the exact success string sent by your app
+        // --- SUCCESS TRIGGER ---
         if (messageString.includes('BOTBUSTER_SUCCESS') || messageString.includes('/qc-submitted')) {
             console.log('[Botbuster] Detected SUCCESS state in postMessage.');
+            triggerSuccessCallback();
             scheduleRemoval();
             return;
         }
 
-        // Handle email / session parameter updates
         if (messageString.includes('email=')) {
             try {
-                const searchStr = messageString.includes('?') 
-                    ? messageString.split('?')[1] 
-                    : messageString.replace(/^\//, '');
-
+                const searchStr = messageString.includes('?') ? messageString.split('?')[1] : messageString.replace(/^\//, '');
                 const params = new URLSearchParams(searchStr);
                 const newEmail = params.get('email');
                 const newSessionId = params.get('session_id');
 
                 if (newEmail && (newEmail !== currentLoadedEmail || (newSessionId && newSessionId !== currentSessionId))) {
-                    console.log('[Botbuster] Received updated email/session_id from iframe:', { newEmail, newSessionId });
-                    initSDK(newEmail, newSessionId, true); // Force update when triggered by message
+                    initSDK(newEmail, newSessionId, true);
                 }
-            } catch (err) {
-                console.error('[Botbuster] Error parsing message data:', err);
-            }
+            } catch (err) {}
         }
     });
 
-    // --- Event Listeners ---
     let timer;
     const handleInput = (e) => {
         const target = e.target;
         if (!target) return;
 
         const isEmailField = (loadedEmailElement && target.id === loadedEmailElement) ||
-            (target.id === 'email') ||
-            (target.type === 'email') ||
-            (target.name === 'email');
+            (target.id === 'email') || (target.type === 'email') || (target.name === 'email');
 
         if (isEmailField) {
-            // Reset inactivity timer when the user interacts with the email input
             resetInactivityTimer();
-            
             clearTimeout(timer);
-            timer = setTimeout(() => {
-                initSDK(target.value.trim());
-            }, 800);
+            timer = setTimeout(() => { initSDK(target.value.trim()); }, 800);
         }
     };
 
     document.addEventListener('input', handleInput, true);
     document.addEventListener('change', handleInput, true);
 
-    // Initial check
     if (initialEmail) {
         initSDK(initialEmail);
     }
