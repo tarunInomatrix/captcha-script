@@ -10,7 +10,14 @@ const _0x5608 = [
         return _0x5608[parseInt(_0x4e2b, 16)];
     };
 
-    const _0x31a412 = document.currentScript;
+    // 1. Safe script reference fallback for async / dynamic injection
+    const _0xgetScript = () => {
+        return document.currentScript || 
+               document.getElementById('botbuster-script') || 
+               document.querySelector('script[data-api-key]');
+    };
+
+    const _0x31a412 = _0xgetScript();
     let _0x2c148e = _0x31a412 ? _0x31a412.getAttribute('data-api-key') || '' : '';
     let _0x5a19cb = _0x31a412 ? _0x31a412.getAttribute('data-action-id') || '' : '';
     let _0x18c21a = _0x31a412 ? _0x31a412.getAttribute('data-email') || '' : '';
@@ -25,13 +32,8 @@ const _0x5608 = [
     const _0x38fa11 = 10 * 60 * 1000;
 
     const _0x183a22 = 'botbuster-container';
-    let _0x491b2c = document.getElementById(_0x183a22);
-    if (!_0x491b2c) {
-        _0x491b2c = document.createElement('div');
-        _0x491b2c.id = _0x183a22;
-        document.body.appendChild(_0x491b2c);
-    }
 
+    // 2. Responsive device detection (mobile breakpoint <= 768px or UA)
     const _0x21c81a = () => {
         const _0x128a = navigator.userAgent;
         const _0x41ab = typeof window !== 'undefined' && window.innerWidth > 0 && window.innerWidth <= 768;
@@ -73,7 +75,15 @@ const _0x5608 = [
         }, _0x38fa11);
     };
 
+    // 3. Dynamic container resolution & iframe injection
     const _0x11c28a = (_0x42918a) => {
+        let _0x491b2c = document.getElementById(_0x183a22);
+        if (!_0x491b2c) {
+            _0x491b2c = document.createElement('div');
+            _0x491b2c.id = _0x183a22;
+            document.body.appendChild(_0x491b2c);
+        }
+
         const _0x32a18b = document.getElementById('botbuster-iframe');
         if (_0x32a18b && _0x32a18b.src === _0x42918a) return;
 
@@ -90,7 +100,7 @@ const _0x5608 = [
 
     async function _0x1928bc(_0x3812fa, _0x219a12 = null, _0x3318bc = false) {
         let _0x1281fa = false;
-        const _0x4281bc = document.getElementById('botbuster-script');
+        const _0x4281bc = _0xgetScript();
         if (_0x4281bc) {
             _0x2c148e = _0x4281bc.getAttribute('data-api-key') || _0x2c148e;
             _0x5a19cb = _0x4281bc.getAttribute('data-action-id') || _0x5a19cb;
@@ -117,6 +127,7 @@ const _0x5608 = [
         const _0x3281ab = _0x21c81a();
         const _0x49182a = _0x192bda || "";
 
+        // Passes _0x5a19cb (data-action-id) properly into actionId
         const _0x28a11c = `https://dev.botbuster.io/submit?actionId=${encodeURIComponent(_0x5a19cb || '')}&apiKey=${encodeURIComponent(_0x2c148e || '')}&device_type=${encodeURIComponent(_0x3281ab)}&email=${encodeURIComponent(_0x3812fa)}&emailElement=${encodeURIComponent(_0x412d8a || '')}&loadedCaptchaUrl=${encodeURIComponent(_0x1128ea || '')}&session_id=${encodeURIComponent(_0x49182a)}`;
 
         _0x11c28a(_0x28a11c);
@@ -125,8 +136,13 @@ const _0x5608 = [
 
     window.initBotbusterSDK = _0x1928bc;
 
+    // 4. Message listener supports botbuster.io, localhost, and 127.0.0.1
     window.addEventListener('message', (_0x219aa) => {
-        if (!_0x219aa.origin.includes('botbuster.io')) return;
+        const _0xorigin = _0x219aa.origin || '';
+        const _0xisAllowed = _0xorigin.includes('botbuster.io') || 
+                             _0xorigin.includes('localhost') || 
+                             _0xorigin.includes('127.0.0.1');
+        if (!_0xisAllowed) return;
         _0x1812fc();
 
         const _0x128ab = _0x219aa.data;
@@ -182,7 +198,10 @@ const _0x5608 = [
     document.addEventListener('input', _0x3381a, true);
     document.addEventListener('change', _0x3381a, true);
 
-    if (_0x18c21a) {
-        _0x1928bc(_0x18c21a);
+    // Initial trigger
+    const _0xinitScript = _0xgetScript();
+    const _0xinitEmail = _0xinitScript ? _0xinitScript.getAttribute('data-email') : _0x18c21a;
+    if (_0xinitEmail) {
+        _0x1928bc(_0xinitEmail);
     }
 })();
