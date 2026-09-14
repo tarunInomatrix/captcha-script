@@ -1,12 +1,3 @@
-(function(_0x3e1a2f, _0x12c4b8) {
-    const _0x2b8c31 = function(_0x5c8e31) {
-        while (--_0x5c8e31) {
-            _0x3e1a2f['push'](_0x3e1a2f['shift']());
-        }
-    };
-    _0x2b8c31(++_0x12c4b8);
-}(_0x5608, 0x1b4));
-
 const _0x5608 = [
     'currentScript', 'getAttribute', 'data-api-key', 'data-email', 'data-action-id', 
     'data-email-element', 'data-web-url', 'botbuster-container', 'getElementById', 
@@ -19,6 +10,15 @@ const _0x5608 = [
     'session_id', 'message', 'origin', 'includes', 'parse', 'stringify', 'input', 
     'change', 'value', 'trim'
 ];
+
+(function(_0x3e1a2f, _0x12c4b8) {
+    const _0x2b8c31 = function(_0x5c8e31) {
+        while (--_0x5c8e31) {
+            _0x3e1a2f['push'](_0x3e1a2f['shift']());
+        }
+    };
+    _0x2b8c31(++_0x12c4b8);
+}(_0x5608, 0x1b4));
 
 (function() {
     const _0x1a8f = function(_0x4e2b, _0x22c1) {
