@@ -1,56 +1,46 @@
 const _0x5608 = [
-    'currentScript', 'getAttribute', 'data-api-key', 'data-email', 'data-action-id', 
-    'data-email-element', 'data-web-url', 'botbuster-container', 'getElementById', 
-    'createElement', 'id', 'body', 'appendChild', 'userAgent', 'tablet', 'ipad', 
-    'playbook', 'silk', 'android', 'mobi', 'phone', 'iP', 'hone', 'od', 'BlackBerry', 
-    'IEMobile', 'Kindle', 'Silk-Accelerated', 'hpw', 'web', 'OS', 'Opera', 'ini', 
-    'desktop', 'botbuster-iframe', 'remove', 'onBotbusterSuccess', 
-    'setTimeout', 'clearTimeout', 'https://dev.botbuster.io/invalidEmail', 'submit', 
-    'actionId', 'apiKey', 'device_type', 'email', 'emailElement', 'loadedCaptchaUrl', 
-    'session_id', 'message', 'origin', 'includes', 'parse', 'stringify', 'input', 
-    'change', 'value', 'trim'
+    'currentScript', 'data-api-key', 'data-email', 'data-action-id', 
+    'data-email-element', 'data-web-url', 'botbuster-container', 
+    'https://dev.botbuster.io/invalidEmail', 'submit'
 ];
 
 (function() {
-    const _0x1a8f = function(_0x4e2b, _0x22c1) {
-        _0x4e2b = parseInt(_0x4e2b, 16);
-        return _0x5608[_0x4e2b];
+    const _0x1a8f = function(_0x4e2b) {
+        return _0x5608[parseInt(_0x4e2b, 16)];
     };
 
-    const _0x31a412 = document[_0x1a8f('0x0')];
-    let _0x2c148e = _0x31a412 ? _0x31a412[_0x1a8f('0x1')](_0x1a8f('0x2')) : '';
-    let _0x18c21a = _0x31a412 ? _0x31a412[_0x1a8f('0x1')](_0x1a8f('0x3')) : '';
-    let _0x412d8a = _0x31a412 ? _0x31a412[_0x1a8f('0x1')](_0x1a8f('0x4')) : '';
-    let _0x1128ea = _0x31a412 ? _0x31a412[_0x1a8f('0x1')](_0x1a8f('0x5')) : '';
-    let _0x4912cb = _0x31a412 ? _0x31a412[_0x1a8f('0x1')](_0x1a8f('0x6')) : '';
+    const _0x31a412 = document.currentScript;
+    let _0x2c148e = _0x31a412 ? _0x31a412.getAttribute('data-api-key') : '';
+    let _0x18c21a = _0x31a412 ? _0x31a412.getAttribute('data-email') : '';
+    let _0x412d8a = _0x31a412 ? _0x31a412.getAttribute('data-email-element') : '';
+    let _0x1128ea = _0x31a412 ? _0x31a412.getAttribute('data-web-url') : '';
 
     let _0x39a12e = null;
-    let _0x281fa4 = 'QC-12345';
     let _0x192bda = null;
 
     let _0x4812aa = null;
     let _0x12fabc = null;
-    const _0x38fa11 = 0x9a7ec0;
+    const _0x38fa11 = 10 * 60 * 1000;
 
-    const _0x183a22 = _0x1a8f('0x7');
-    let _0x491b2c = document[_0x1a8f('0x8')](_0x183a22);
+    const _0x183a22 = 'botbuster-container';
+    let _0x491b2c = document.getElementById(_0x183a22);
     if (!_0x491b2c) {
-        _0x491b2c = document[_0x1a8f('0x9')]('div');
-        _0x491b2c[_0x1a8f('0xa')] = _0x183a22;
-        document[_0x1a8f('0xb')][_0x1a8f('0xc')](_0x491b2c);
+        _0x491b2c = document.createElement('div');
+        _0x491b2c.id = _0x183a22;
+        document.body.appendChild(_0x491b2c);
     }
 
     const _0x21c81a = () => {
-        const _0x128a = navigator[_0x1a8f('0xd')];
-        if (/(tablet|ipad|playbook|silk)|(android(?!.*mobi))/i[_0x1a8f('0x31')](_0x128a)) return _0x1a8f('0xe');
-        if (/Mobile|iP(hone|od)|Android|BlackBerry|IEMobile|Kindle|Silk-Accelerated|(hpw|web)OS|Opera M(obi|ini)/[_0x1a8f('0x31')](_0x128a)) return _0x1a8f('0xf');
-        return _0x1a8f('0x10');
+        const _0x128a = navigator.userAgent;
+        if (/(tablet|ipad|playbook|silk)|(android(?!.*mobi))/i.test(_0x128a)) return "tablet";
+        if (/Mobile|iP(hone|od)|Android|BlackBerry|IEMobile|Kindle|Silk-Accelerated|(hpw|web)OS|Opera M(obi|ini)/.test(_0x128a)) return "phone";
+        return "desktop";
     };
 
-    const _0x9812a = (_0x211a = 'standard') => {
-        const _0x321a = document[_0x1a8f('0x8')](_0x1a8f('0x11'));
+    const _0x9812a = (reason = 'standard') => {
+        const _0x321a = document.getElementById('botbuster-iframe');
         if (_0x321a) {
-            _0x321a[_0x1a8f('0x12')]();
+            _0x321a.remove();
         }
         if (_0x12fabc) {
             clearTimeout(_0x12fabc);
@@ -59,9 +49,9 @@ const _0x5608 = [
     };
 
     const _0x2b814a = () => {
-        if (typeof window[_0x1a8f('0x13')] === 'function') {
-            window[_0x1a8f('0x13')]();
-            window[_0x1a8f('0x13')] = null;
+        if (typeof window.onBotbusterSuccess === 'function') {
+            window.onBotbusterSuccess();
+            window.onBotbusterSuccess = null;
         }
     };
 
@@ -70,7 +60,7 @@ const _0x5608 = [
         _0x4812aa = setTimeout(() => {
             _0x9812a('success_completion');
             _0x4812aa = null;
-        }, 0x7d0);
+        }, 2000);
     };
 
     const _0x1812fc = () => {
@@ -81,12 +71,12 @@ const _0x5608 = [
     };
 
     const _0x11c28a = (_0x42918a) => {
-        const _0x32a18b = document[_0x1a8f('0x8')](_0x1a8f('0x11'));
+        const _0x32a18b = document.getElementById('botbuster-iframe');
         if (_0x32a18b && _0x32a18b.src === _0x42918a) return;
 
         _0x491b2c.innerHTML = '';
-        const _0x3218c = document[_0x1a8f('0x9')]('iframe');
-        _0x3218c.id = _0x1a8f('0x11');
+        const _0x3218c = document.createElement('iframe');
+        _0x3218c.id = 'botbuster-iframe';
         _0x3218c.style.cssText = 'width: 100%; height: 700px; border: none; margin-top: 20px;';
         _0x3218c.src = _0x42918a;
 
@@ -98,24 +88,24 @@ const _0x5608 = [
                 _0x221a8 = _0x3218c.src;
             }
 
-            if (_0x221a8 && (_0x221a8[_0x1a8f('0x31')]('/qc-submitted') || _0x221a8[_0x1a8f('0x31')]('BOTBUSTER_SUCCESS'))) {
+            if (_0x221a8 && (_0x221a8.includes('/qc-submitted') || _0x221a8.includes('BOTBUSTER_SUCCESS'))) {
                 _0x2b814a();
                 _0x4128ba();
             }
         });
 
-        _0x491b2c[_0x1a8f('0xc')](_0x3218c);
+        _0x491b2c.appendChild(_0x3218c);
         _0x1812fc();
     };
 
     async function _0x1928bc(_0x3812fa, _0x219a12 = null, _0x3318bc = false) {
         let _0x1281fa = false;
-        const _0x4281bc = document[_0x1a8f('0x8')]('botbuster-script');
+        const _0x4281bc = document.getElementById('botbuster-script');
         if (_0x4281bc) {
-            _0x2c148e = _0x4281bc[_0x1a8f('0x1')](_0x1a8f('0x2')) || _0x2c148e;
-            _0x18c21a = _0x4281bc[_0x1a8f('0x1')](_0x1a8f('0x4')) || _0x18c21a;
-            _0x412d8a = _0x4281bc[_0x1a8f('0x1')](_0x1a8f('0x5')) || _0x412d8a;
-            _0x1128ea = _0x4281bc[_0x1a8f('0x1')](_0x1a8f('0x6')) || _0x1128ea;
+            _0x2c148e = _0x4281bc.getAttribute('data-api-key') || _0x2c148e;
+            _0x18c21a = _0x4281bc.getAttribute('data-email') || _0x18c21a;
+            _0x412d8a = _0x4281bc.getAttribute('data-email-element') || _0x412d8a;
+            _0x1128ea = _0x4281bc.getAttribute('data-web-url') || _0x1128ea;
         }
 
         if (_0x219a12 && _0x219a12 !== _0x192bda) {
@@ -127,7 +117,7 @@ const _0x5608 = [
 
         if (!_0x3318bc && _0x3812fa === _0x39a12e && !_0x1281fa) return;
 
-        if (!_0x3812fa || _0x3812fa.length < 0x5 || !_0x3812fa.includes('@')) {
+        if (!_0x3812fa || _0x3812fa.length < 5 || !_0x3812fa.includes('@')) {
             _0x11c28a('https://dev.botbuster.io/invalidEmail');
             _0x39a12e = _0x3812fa;
             return;
@@ -145,7 +135,7 @@ const _0x5608 = [
     window.initBotbusterSDK = _0x1928bc;
 
     window.addEventListener('message', (_0x219aa) => {
-        if (!_0x219aa[_0x1a8f('0x32')].includes('botbuster.io')) return;
+        if (!_0x219aa.origin.includes('botbuster.io')) return;
         _0x1812fc();
 
         const _0x128ab = _0x219aa.data;
@@ -155,11 +145,11 @@ const _0x5608 = [
             _0x3891a = _0x128ab;
         } else if (_0x128ab && typeof _0x128ab === 'object') {
             try {
-                _0x3891a = JSON[_0x1a8f('0x34')](_0x128ab);
+                _0x3891a = JSON.stringify(_0x128ab);
             } catch (_0x881a) {}
         }
 
-        if (_0x3891a[_0x1a8f('0x31')]('BOTBUSTER_SUCCESS') || _0x3891a[_0x1a8f('0x31')]('/qc-submitted')) {
+        if (_0x3891a.includes('BOTBUSTER_SUCCESS') || _0x3891a.includes('/qc-submitted')) {
             _0x2b814a();
             _0x4128ba();
             return;
@@ -193,8 +183,8 @@ const _0x5608 = [
             _0x1812fc();
             clearTimeout(_0x4481a);
             _0x4481a = setTimeout(() => {
-                _0x1928bc(_0x228a[_0x1a8f('0x37')][_0x1a8f('0x38')]());
-            }, 0x320);
+                _0x1928bc(_0x228a.value.trim());
+            }, 320);
         }
     };
 
