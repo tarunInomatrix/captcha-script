@@ -1,7 +1,8 @@
 const _0x5608 = [
     'currentScript', 'data-api-key', 'data-email', 'data-action-id', 
     'data-email-element', 'data-web-url', 'botbuster-container', 
-    'https://dev.botbuster.io/invalidEmail', 'submit'
+    'https://dev.botbuster.io/invalidEmail', 'submit', 'botbuster-iframe',
+    'botbuster-script', 'BOTBUSTER_SUCCESS', '/qc-submitted'
 ];
 
 (function() {
@@ -10,10 +11,11 @@ const _0x5608 = [
     };
 
     const _0x31a412 = document.currentScript;
-    let _0x2c148e = _0x31a412 ? _0x31a412.getAttribute('data-api-key') : '';
-    let _0x18c21a = _0x31a412 ? _0x31a412.getAttribute('data-email') : '';
-    let _0x412d8a = _0x31a412 ? _0x31a412.getAttribute('data-email-element') : '';
-    let _0x1128ea = _0x31a412 ? _0x31a412.getAttribute('data-web-url') : '';
+    let _0x2c148e = _0x31a412 ? _0x31a412.getAttribute('data-api-key') || '' : '';
+    let _0x5a19cb = _0x31a412 ? _0x31a412.getAttribute('data-action-id') || '' : '';
+    let _0x18c21a = _0x31a412 ? _0x31a412.getAttribute('data-email') || '' : '';
+    let _0x412d8a = _0x31a412 ? _0x31a412.getAttribute('data-email-element') || '' : '';
+    let _0x1128ea = _0x31a412 ? _0x31a412.getAttribute('data-web-url') || '' : '';
 
     let _0x39a12e = null;
     let _0x192bda = null;
@@ -32,8 +34,9 @@ const _0x5608 = [
 
     const _0x21c81a = () => {
         const _0x128a = navigator.userAgent;
+        const _0x41ab = typeof window !== 'undefined' && window.innerWidth > 0 && window.innerWidth <= 768;
         if (/(tablet|ipad|playbook|silk)|(android(?!.*mobi))/i.test(_0x128a)) return "tablet";
-        if (/Mobile|iP(hone|od)|Android|BlackBerry|IEMobile|Kindle|Silk-Accelerated|(hpw|web)OS|Opera M(obi|ini)/.test(_0x128a)) return "phone";
+        if (_0x41ab || /Mobile|iP(hone|od)|Android|BlackBerry|IEMobile|Kindle|Silk-Accelerated|(hpw|web)OS|Opera M(obi|ini)/i.test(_0x128a)) return "phone";
         return "desktop";
     };
 
@@ -77,22 +80,9 @@ const _0x5608 = [
         _0x491b2c.innerHTML = '';
         const _0x3218c = document.createElement('iframe');
         _0x3218c.id = 'botbuster-iframe';
-        _0x3218c.style.cssText = 'width: 100%; height: 700px; border: none; margin-top: 20px;';
+        _0x3218c.style.cssText = 'width: 100%; height: 700px; max-height: 90vh; border: none; margin-top: 20px;';
         _0x3218c.src = _0x42918a;
-
-        _0x3218c.addEventListener('load', () => {
-            let _0x221a8 = null;
-            try {
-                _0x221a8 = _0x3218c.contentWindow.location.href;
-            } catch (_0x991a) {
-                _0x221a8 = _0x3218c.src;
-            }
-
-            if (_0x221a8 && (_0x221a8.includes('/qc-submitted') || _0x221a8.includes('BOTBUSTER_SUCCESS'))) {
-                _0x2b814a();
-                _0x4128ba();
-            }
-        });
+        _0x3218c.setAttribute('allow', 'cross-origin-isolated');
 
         _0x491b2c.appendChild(_0x3218c);
         _0x1812fc();
@@ -103,6 +93,7 @@ const _0x5608 = [
         const _0x4281bc = document.getElementById('botbuster-script');
         if (_0x4281bc) {
             _0x2c148e = _0x4281bc.getAttribute('data-api-key') || _0x2c148e;
+            _0x5a19cb = _0x4281bc.getAttribute('data-action-id') || _0x5a19cb;
             _0x18c21a = _0x4281bc.getAttribute('data-email') || _0x18c21a;
             _0x412d8a = _0x4281bc.getAttribute('data-email-element') || _0x412d8a;
             _0x1128ea = _0x4281bc.getAttribute('data-web-url') || _0x1128ea;
@@ -126,7 +117,7 @@ const _0x5608 = [
         const _0x3281ab = _0x21c81a();
         const _0x49182a = _0x192bda || "";
 
-        const _0x28a11c = `https://dev.botbuster.io/submit?actionId=${encodeURIComponent(_0x18c21a || '')}&apiKey=${encodeURIComponent(_0x2c148e || '')}&device_type=${encodeURIComponent(_0x3281ab)}&email=${encodeURIComponent(_0x3812fa)}&emailElement=${encodeURIComponent(_0x412d8a || '')}&loadedCaptchaUrl=${encodeURIComponent(_0x1128ea || '')}&session_id=${encodeURIComponent(_0x49182a)}`;
+        const _0x28a11c = `https://dev.botbuster.io/submit?actionId=${encodeURIComponent(_0x5a19cb || '')}&apiKey=${encodeURIComponent(_0x2c148e || '')}&device_type=${encodeURIComponent(_0x3281ab)}&email=${encodeURIComponent(_0x3812fa)}&emailElement=${encodeURIComponent(_0x412d8a || '')}&loadedCaptchaUrl=${encodeURIComponent(_0x1128ea || '')}&session_id=${encodeURIComponent(_0x49182a)}`;
 
         _0x11c28a(_0x28a11c);
         _0x39a12e = _0x3812fa;
