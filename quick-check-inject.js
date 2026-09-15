@@ -1,8 +1,7 @@
 const _0x5608 = [
     'currentScript', 'data-api-key', 'data-email', 'data-action-id', 
     'data-email-element', 'data-web-url', 'botbuster-container', 
-    'https://dev.botbuster.io/invalidEmail', 'submit', 'botbuster-iframe',
-    'botbuster-script', 'BOTBUSTER_SUCCESS', '/qc-submitted'
+    'https://dev.botbuster.io/invalidEmail', 'submit'
 ];
 
 (function() {
@@ -10,7 +9,6 @@ const _0x5608 = [
         return _0x5608[parseInt(_0x4e2b, 16)];
     };
 
-    // 1. Safe script reference fallback for async / dynamic injection
     const _0xgetScript = () => {
         return document.currentScript || 
                document.getElementById('botbuster-script') || 
@@ -33,13 +31,21 @@ const _0x5608 = [
 
     const _0x183a22 = 'botbuster-container';
 
-    // 2. Responsive device detection (mobile breakpoint <= 768px or UA)
     const _0x21c81a = () => {
         const _0x128a = navigator.userAgent;
         const _0x41ab = typeof window !== 'undefined' && window.innerWidth > 0 && window.innerWidth <= 768;
-        if (/(tablet|ipad|playbook|silk)|(android(?!.*mobi))/i.test(_0x128a)) return "tablet";
-        if (_0x41ab || /Mobile|iP(hone|od)|Android|BlackBerry|IEMobile|Kindle|Silk-Accelerated|(hpw|web)OS|Opera M(obi|ini)/i.test(_0x128a)) return "phone";
-        return "desktop";
+        let _0xdev = "desktop";
+        if (/(tablet|ipad|playbook|silk)|(android(?!.*mobi))/i.test(_0x128a)) _0xdev = "tablet";
+        else if (_0x41ab || /Mobile|iP(hone|od)|Android|BlackBerry|IEMobile|Kindle|Silk-Accelerated|(hpw|web)OS|Opera M(obi|ini)/i.test(_0x128a)) _0xdev = "phone";
+
+        console.log('%c[Botbuster SDK - Device Detection]', 'background: #0284c7; color: white; padding: 2px 6px; border-radius: 4px; font-weight: bold;', {
+            detected: _0xdev,
+            windowInnerWidth: window.innerWidth,
+            screenWidth: window.screen ? window.screen.width : null,
+            isWidthUnder768: _0x41ab,
+            userAgent: _0x128a
+        });
+        return _0xdev;
     };
 
     const _0x9812a = (reason = 'standard') => {
@@ -75,7 +81,6 @@ const _0x5608 = [
         }, _0x38fa11);
     };
 
-    // 3. Dynamic container resolution & iframe injection
     const _0x11c28a = (_0x42918a) => {
         let _0x491b2c = document.getElementById(_0x183a22);
         if (!_0x491b2c) {
@@ -127,8 +132,12 @@ const _0x5608 = [
         const _0x3281ab = _0x21c81a();
         const _0x49182a = _0x192bda || "";
 
-        // Passes _0x5a19cb (data-action-id) properly into actionId
         const _0x28a11c = `https://dev.botbuster.io/submit?actionId=${encodeURIComponent(_0x5a19cb || '')}&apiKey=${encodeURIComponent(_0x2c148e || '')}&device_type=${encodeURIComponent(_0x3281ab)}&email=${encodeURIComponent(_0x3812fa)}&emailElement=${encodeURIComponent(_0x412d8a || '')}&loadedCaptchaUrl=${encodeURIComponent(_0x1128ea || '')}&session_id=${encodeURIComponent(_0x49182a)}`;
+
+        console.log('%c[Botbuster SDK - Injecting Iframe]', 'background: #059669; color: white; padding: 2px 6px; border-radius: 4px; font-weight: bold;', {
+            deviceType: _0x3281ab,
+            url: _0x28a11c
+        });
 
         _0x11c28a(_0x28a11c);
         _0x39a12e = _0x3812fa;
@@ -136,7 +145,6 @@ const _0x5608 = [
 
     window.initBotbusterSDK = _0x1928bc;
 
-    // 4. Message listener supports botbuster.io, localhost, and 127.0.0.1
     window.addEventListener('message', (_0x219aa) => {
         const _0xorigin = _0x219aa.origin || '';
         const _0xisAllowed = _0xorigin.includes('botbuster.io') || 
@@ -198,7 +206,6 @@ const _0x5608 = [
     document.addEventListener('input', _0x3381a, true);
     document.addEventListener('change', _0x3381a, true);
 
-    // Initial trigger
     const _0xinitScript = _0xgetScript();
     const _0xinitEmail = _0xinitScript ? _0xinitScript.getAttribute('data-email') : _0x18c21a;
     if (_0xinitEmail) {
