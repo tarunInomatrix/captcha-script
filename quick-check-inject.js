@@ -32,17 +32,33 @@ const _0x5608 = [
     const _0x183a22 = 'botbuster-container';
 
     const _0x21c81a = () => {
-        const _0x128a = navigator.userAgent;
+        const _0x128a = navigator.userAgent || navigator.vendor || window.opera;
         const _0x41ab = typeof window !== 'undefined' && window.innerWidth > 0 && window.innerWidth <= 768;
+        const hasTouch = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0) || (navigator.msMaxTouchPoints > 0);
+        
+        // Fix for iPads on iOS 13+ which present themselves as MacIntel but have touch capability
+        const isIpadOS = navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1;
+
         let _0xdev = "desktop";
-        if (/(tablet|ipad|playbook|silk)|(android(?!.*mobi))/i.test(_0x128a)) _0xdev = "tablet";
-        else if (_0x41ab || /Mobile|iP(hone|od)|Android|BlackBerry|IEMobile|Kindle|Silk-Accelerated|(hpw|web)OS|Opera M(obi|ini)/i.test(_0x128a)) _0xdev = "phone";
+
+        if (/(tablet|ipad|playbook|silk)|(android(?!.*mobi))/i.test(_0x128a) || isIpadOS) {
+            _0xdev = "tablet";
+        } else if (/Mobile|iP(hone|od)|Android|BlackBerry|IEMobile|Kindle|Silk-Accelerated|(hpw|web)OS|Opera M(obi|ini)/i.test(_0x128a)) {
+            _0xdev = "phone";
+        } else if (_0x41ab && hasTouch) {
+            // Fallback for some touch devices with narrow screens that don't declare Mobile in UA
+            _0xdev = "phone";
+        } else if (_0x41ab) {
+            // Optional fallback: small screens without touch could be considered 'phone' layout for responsiveness
+            _0xdev = "phone";
+        }
 
         console.log('%c[Botbuster SDK - Device Detection]', 'background: #0284c7; color: white; padding: 2px 6px; border-radius: 4px; font-weight: bold;', {
             detected: _0xdev,
             windowInnerWidth: window.innerWidth,
             screenWidth: window.screen ? window.screen.width : null,
             isWidthUnder768: _0x41ab,
+            hasTouch: hasTouch,
             userAgent: _0x128a
         });
         return _0xdev;
