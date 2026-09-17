@@ -136,6 +136,32 @@ const _0x5608 = [
 
         if (!_0x3318bc && _0x3812fa === _0x39a12e && !_0x1281fa) return;
 
+        // 1. Verify domain whitelist prior to rendering any UI
+        try {
+            const initApiUrl = 'https://5znp405k6i.execute-api.eu-north-1.amazonaws.com/dev/initSDK';
+            const initResponse = await fetch(initApiUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    apiKey: _0x2c148e || '',
+                    domain: window.location.href
+                })
+            });
+
+            const initData = await initResponse.json();
+
+            if (initData && initData.code === 'DOMAIN_NOT_WHITELISTED') {
+                console.error('[Botbuster SDK] ' + (initData.error || 'Domain is not whitelisted. Aborting iframe injection.'));
+                _0x9812a('domain_not_whitelisted');
+                return; // Cease execution immediately
+            }
+        } catch (err) {
+            console.warn('[Botbuster SDK] Domain whitelist check failed.', err);
+        }
+
+        // 2. Validate email format
         if (!_0x3812fa || _0x3812fa.length < 5 || !_0x3812fa.includes('@')) {
             _0x11c28a('https://dev.botbuster.io/invalidEmail');
             _0x39a12e = _0x3812fa;
@@ -152,34 +178,9 @@ const _0x5608 = [
             url: _0x28a11c
         });
 
-        // 1. Inject the iframe immediately
+        // 3. Inject the iframe only after domain verification passes
         _0x11c28a(_0x28a11c);
         _0x39a12e = _0x3812fa;
-
-        // 2. Call the init SDK endpoint in the background to verify domain
-        try {
-            const initApiUrl = 'https://5znp405k6i.execute-api.eu-north-1.amazonaws.com/dev/initSDK';
-            const initResponse = await fetch(initApiUrl, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    apiKey: _0x2c148e || '',
-                    domain: window.location.href // Send the current domain URL
-                })
-            });
-
-            const initData = await initResponse.json();
-
-            // 3. If domain is not whitelisted, remove the injected iframe
-            if (initData && initData.code === 'DOMAIN_NOT_WHITELISTED') {
-                console.error('[Botbuster SDK] ' + (initData.error || 'Domain is not whitelisted. Removing iframe.'));
-                _0x9812a('domain_not_whitelisted'); // Remove the iframe
-            }
-        } catch (err) {
-            console.warn('[Botbuster SDK] Domain whitelist check failed.', err);
-        }
     }
 
     window.initBotbusterSDK = _0x1928bc;
