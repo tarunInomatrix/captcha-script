@@ -142,18 +142,22 @@ const _0x5608 = [
             return;
         }
 
+        // 1. Construct parameters to maintain identical API request structure
         const _0x3281ab = _0x21c81a();
         const _0x49182a = _0x192bda || "";
         
-        // 1. Construct target submit URL (for the iframe src)
-        const _0x28a11c = `https://dev.botbuster.io/submit?actionId=${encodeURIComponent(_0x5a19cb || '')}&apiKey=${encodeURIComponent(_0x2c148e || '')}&device_type=${encodeURIComponent(_0x3281ab)}&email=${encodeURIComponent(_0x3812fa)}&emailElement=${encodeURIComponent(_0x412d8a || '')}&loadedCaptchaUrl=${encodeURIComponent(_0x1128ea || '')}&session_id=${encodeURIComponent(_0x49182a)}`;
+        // Build the query string separately so it can be applied to both URLs
+        const _0xqueryString = `?actionId=${encodeURIComponent(_0x5a19cb || '')}&apiKey=${encodeURIComponent(_0x2c148e || '')}&device_type=${encodeURIComponent(_0x3281ab)}&email=${encodeURIComponent(_0x3812fa)}&emailElement=${encodeURIComponent(_0x412d8a || '')}&loadedCaptchaUrl=${encodeURIComponent(_0x1128ea || '')}&session_id=${encodeURIComponent(_0x49182a)}`;
 
-        // 2. Construct the initSDK API validation URL 
-        const _0xApiCheckUrl = `https://5znp405k6i.execute-api.eu-north-1.amazonaws.com/dev/initSDK?apiKey=${encodeURIComponent(_0x2c148e || '')}&actionId=${encodeURIComponent(_0x5a19cb || '')}`;
+        // URL for the iframe injection
+        const _0x28a11c = `https://dev.botbuster.io/submit${_0xqueryString}`;
+        
+        // Validation endpoint using identical query request structure
+        const _0xValidationApiUrl = `https://5znp405k6i.execute-api.eu-north-1.amazonaws.com/dev/initSDK${_0xqueryString}`;
 
-        // 3. Perform verification request against initSDK FIRST
+        // 2. Perform verification request FIRST against the new endpoint
         try {
-            const _0xres = await fetch(_0xApiCheckUrl);
+            const _0xres = await fetch(_0xValidationApiUrl);
             const _0xclone = _0xres.clone();
             let _0xjson = null;
 
@@ -161,24 +165,24 @@ const _0x5608 = [
                 _0xjson = await _0xclone.json();
             } catch (_) {}
 
-            // Prevent iframe injection if domain is not whitelisted
+            // Check if error response matches DOMAIN_NOT_WHITELISTED
             if (_0xjson && _0xjson.code === 'DOMAIN_NOT_WHITELISTED') {
                 console.error('[Botbuster SDK] ' + (_0xjson.error || 'Domain is not whitelisted.'));
                 _0x9812a('domain_not_whitelisted');
-                return; // Terminate execution — skips iframe injection completely
+                return; // Terminate execution — skip iframe injection
             }
 
             // Halt if response is not ok
             if (!_0xres.ok) {
                 console.error('[Botbuster SDK] API check failed with status:', _0xres.status);
-                return; // Terminate execution
+                return; // Terminate execution — skip iframe injection
             }
         } catch (err) {
             console.warn('[Botbuster SDK] Network request error during validation:', err);
-            return; // Terminate execution
+            return; // Terminate execution — skip iframe injection
         }
 
-        // 4. Runs only when the API check succeeds
+        // 3. Runs only when the API check succeeds
         console.log('%c[Botbuster SDK - Injecting Iframe]', 'background: #059669; color: white; padding: 2px 6px; border-radius: 4px; font-weight: bold;', {
             deviceType: _0x3281ab,
             url: _0x28a11c
