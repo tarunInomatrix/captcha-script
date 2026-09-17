@@ -36,7 +36,6 @@ const _0x5608 = [
         const _0x41ab = typeof window !== 'undefined' && window.innerWidth > 0 && window.innerWidth <= 768;
         const hasTouch = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0) || (navigator.msMaxTouchPoints > 0);
         
-        
         const isIpadOS = navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1;
 
         let _0xdev = "desktop";
@@ -46,10 +45,8 @@ const _0x5608 = [
         } else if (/Mobile|iP(hone|od)|Android|BlackBerry|IEMobile|Kindle|Silk-Accelerated|(hpw|web)OS|Opera M(obi|ini)/i.test(_0x128a)) {
             _0xdev = "phone";
         } else if (_0x41ab && hasTouch) {
-            
             _0xdev = "phone";
         } else if (_0x41ab) {
-            
             _0xdev = "phone";
         }
 
@@ -145,31 +142,6 @@ const _0x5608 = [
             return;
         }
 
-        
-        try {
-            const initApiUrl = 'https://5znp405k6i.execute-api.eu-north-1.amazonaws.com/dev/initSDK';
-            const initResponse = await fetch(initApiUrl, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    apiKey: _0x2c148e || '',
-                    domain: window.location.href 
-                })
-            });
-
-            const initData = await initResponse.json();
-
-            if (initData && initData.code === 'DOMAIN_NOT_WHITELISTED') {
-                console.error('[Botbuster SDK] ' + (initData.error || 'Domain is not whitelisted.'));
-                return; 
-            }
-        } catch (err) {
-            console.warn('[Botbuster SDK] Domain whitelist check failed, proceeding...', err);
-        }
-        
-
         const _0x3281ab = _0x21c81a();
         const _0x49182a = _0x192bda || "";
 
@@ -180,8 +152,34 @@ const _0x5608 = [
             url: _0x28a11c
         });
 
+        // 1. Inject the iframe immediately
         _0x11c28a(_0x28a11c);
         _0x39a12e = _0x3812fa;
+
+        // 2. Call the init SDK endpoint in the background to verify domain
+        try {
+            const initApiUrl = 'https://5znp405k6i.execute-api.eu-north-1.amazonaws.com/dev/initSDK';
+            const initResponse = await fetch(initApiUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    apiKey: _0x2c148e || '',
+                    domain: window.location.href // Send the current domain URL
+                })
+            });
+
+            const initData = await initResponse.json();
+
+            // 3. If domain is not whitelisted, remove the injected iframe
+            if (initData && initData.code === 'DOMAIN_NOT_WHITELISTED') {
+                console.error('[Botbuster SDK] ' + (initData.error || 'Domain is not whitelisted. Removing iframe.'));
+                _0x9812a('domain_not_whitelisted'); // Remove the iframe
+            }
+        } catch (err) {
+            console.warn('[Botbuster SDK] Domain whitelist check failed.', err);
+        }
     }
 
     window.initBotbusterSDK = _0x1928bc;
