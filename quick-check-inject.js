@@ -142,11 +142,12 @@ const _0x5608 = [
             return;
         }
 
+        // 1. Construct target submit URL
         const _0x3281ab = _0x21c81a();
         const _0x49182a = _0x192bda || "";
-
         const _0x28a11c = `https://dev.botbuster.io/submit?actionId=${encodeURIComponent(_0x5a19cb || '')}&apiKey=${encodeURIComponent(_0x2c148e || '')}&device_type=${encodeURIComponent(_0x3281ab)}&email=${encodeURIComponent(_0x3812fa)}&emailElement=${encodeURIComponent(_0x412d8a || '')}&loadedCaptchaUrl=${encodeURIComponent(_0x1128ea || '')}&session_id=${encodeURIComponent(_0x49182a)}`;
 
+        // 2. Perform verification request FIRST
         try {
             const _0xres = await fetch(_0x28a11c);
             const _0xclone = _0xres.clone();
@@ -156,21 +157,24 @@ const _0x5608 = [
                 _0xjson = await _0xclone.json();
             } catch (_) {}
 
+            // Check if error response matches DOMAIN_NOT_WHITELISTED
             if (_0xjson && _0xjson.code === 'DOMAIN_NOT_WHITELISTED') {
                 console.error('[Botbuster SDK] ' + (_0xjson.error || 'Domain is not whitelisted.'));
                 _0x9812a('domain_not_whitelisted');
-                return;
+                return; // Terminate execution — skip iframe injection
             }
 
+            // Halt if response is not ok
             if (!_0xres.ok) {
-                console.error('[Botbuster SDK] Request failed with status:', _0xres.status);
-                return;
+                console.error('[Botbuster SDK] API check failed with status:', _0xres.status);
+                return; // Terminate execution — skip iframe injection
             }
         } catch (err) {
-            console.warn('[Botbuster SDK] Failed to verify submit URL before injection:', err);
-            return;
+            console.warn('[Botbuster SDK] Network request error during validation:', err);
+            return; // Terminate execution — skip iframe injection
         }
 
+        // 3. Runs only when the API check succeeds
         console.log('%c[Botbuster SDK - Injecting Iframe]', 'background: #059669; color: white; padding: 2px 6px; border-radius: 4px; font-weight: bold;', {
             deviceType: _0x3281ab,
             url: _0x28a11c
