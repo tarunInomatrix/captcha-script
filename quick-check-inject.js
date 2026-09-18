@@ -22,10 +22,7 @@ const _0x5608 = [
     let _0x412d8a = _0x31a412 ? _0x31a412.getAttribute('data-email-element') || '' : '';
     let _0x1128ea = _0x31a412 ? _0x31a412.getAttribute('data-web-url') || '' : '';
     
-    // Check if error response matches DOMAIN_NOT_WHITELISTED
-    // Note: Assuming _0xjson is populated from an API call that should happen here or is globally available. 
-    // If this needs an API call right after getting the script, that logic needs to be inserted here.
-    // For now, I'm placing the block as requested, but ensuring it doesn't break if _0xjson isn't defined yet.
+    
     if (typeof _0xjson !== 'undefined' && _0xjson && _0xjson.code === 'DOMAIN_NOT_WHITELISTED') {
         console.error('[Botbuster SDK] ' + (_0xjson.error || 'Domain is not whitelisted.'));
         _0x9812a('domain_not_whitelisted');
@@ -169,9 +166,7 @@ const _0x5608 = [
 
             // Handle 403 Forbidden specifically (likely domain not whitelisted)
             if (_0xres.status === 403) {
-                console.error('[Botbuster SDK] Domain is not whitelisted or request forbidden (403).');
-                _0x9812a('domain_not_whitelisted_403');
-                return; // Terminate execution
+                return;
             }
 
             // Halt if response is not ok (for other error statuses)
