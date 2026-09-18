@@ -36,6 +36,9 @@ const _0x5608 = [
     let _0x12fabc = null;
     const _0x38fa11 = 10 * 60 * 1000;
 
+    let _0xapiBlocked = false;
+    let _0xisFetching = false;
+
     const _0x183a22 = 'botbuster-container';
 
     const _0x21c81a = () => {
@@ -124,6 +127,8 @@ const _0x5608 = [
     };
 
     async function _0x1928bc(_0x3812fa, _0x219a12 = null, _0x3318bc = false) {
+        if (_0xapiBlocked || _0xisFetching) return;
+
         let _0x1281fa = false;
         const _0x4281bc = _0xgetScript();
         if (_0x4281bc) {
@@ -157,6 +162,7 @@ const _0x5608 = [
         // 2. Perform verification request FIRST against the actual AWS API endpoint
         const _0xapiUrl = 'https://5znp405k6i.execute-api.eu-north-1.amazonaws.com/dev/initSDK';
         
+        _0xisFetching = true;
         try {
             const _0xres = await fetch(_0xapiUrl, {
                 method: 'POST',
@@ -174,17 +180,23 @@ const _0x5608 = [
 
             // Handle 403 Forbidden - stop execution and DO NOT inject iframe
             if (_0xres.status === 403) {
+                _0xapiBlocked = true;
+                _0xisFetching = false;
                 return; 
             }
 
             // Halt if the validation API returns any other failure status
             if (!_0xres.ok) {
+                _0xisFetching = false;
                 return;
             }
         } catch (err) {
             // Silently stop if the network request fails (e.g., CORS rejection for non-whitelisted domains)
+            _0xisFetching = false;
             return; 
         }
+        
+        _0xisFetching = false;
 
         // 3. Runs only when the API check succeeds
         console.log('%c[Botbuster SDK - Injecting Iframe]', 'background: #059669; color: white; padding: 2px 6px; border-radius: 4px; font-weight: bold;', {
