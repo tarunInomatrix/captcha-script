@@ -172,7 +172,7 @@ const _0x5608 = [
                 })
             });
 
-            // Handle 403 Forbidden - do absolutely nothing and stop execution
+            // Handle 403 Forbidden - stop execution and DO NOT inject iframe
             if (_0xres.status === 403) {
                 return; 
             }
