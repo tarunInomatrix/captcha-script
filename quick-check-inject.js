@@ -21,6 +21,12 @@ const _0x5608 = [
     let _0x18c21a = _0x31a412 ? _0x31a412.getAttribute('data-email') || '' : '';
     let _0x412d8a = _0x31a412 ? _0x31a412.getAttribute('data-email-element') || '' : '';
     let _0x1128ea = _0x31a412 ? _0x31a412.getAttribute('data-web-url') || '' : '';
+    
+    if (typeof _0xjson !== 'undefined' && _0xjson && _0xjson.code === 'DOMAIN_NOT_WHITELISTED') {
+        console.error('[Botbuster SDK] ' + (_0xjson.error || 'Domain is not whitelisted.'));
+        _0x9812a('domain_not_whitelisted');
+        return; // Terminate execution — skip iframe injection
+    }
 
     let _0x39a12e = null;
     let _0x192bda = null;
@@ -29,17 +35,17 @@ const _0x5608 = [
     let _0x12fabc = null;
     const _0x38fa11 = 10 * 60 * 1000;
 
-    const _0x183a22 = 'botbuster-container';
-
+    // Flags to prevent duplicate executions and completely block the SDK on 403
     let _0xapiBlocked = false;
     let _0xisFetching = false;
+
+    const _0x183a22 = 'botbuster-container';
 
     const _0x21c81a = () => {
         const _0x128a = navigator.userAgent || navigator.vendor || window.opera;
         const _0x41ab = typeof window !== 'undefined' && window.innerWidth > 0 && window.innerWidth <= 768;
         const hasTouch = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0) || (navigator.msMaxTouchPoints > 0);
         
-        // Fix for iPads on iOS 13+ which present themselves as MacIntel but have touch capability
         const isIpadOS = navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1;
 
         let _0xdev = "desktop";
@@ -49,10 +55,8 @@ const _0x5608 = [
         } else if (/Mobile|iP(hone|od)|Android|BlackBerry|IEMobile|Kindle|Silk-Accelerated|(hpw|web)OS|Opera M(obi|ini)/i.test(_0x128a)) {
             _0xdev = "phone";
         } else if (_0x41ab && hasTouch) {
-            // Fallback for some touch devices with narrow screens that don't declare Mobile in UA
             _0xdev = "phone";
         } else if (_0x41ab) {
-            // Optional fallback: small screens without touch could be considered 'phone' layout for responsiveness
             _0xdev = "phone";
         }
 
@@ -123,7 +127,7 @@ const _0x5608 = [
     };
 
     async function _0x1928bc(_0x3812fa, _0x219a12 = null, _0x3318bc = false) {
-        if (_0xapiBlocked || _0xisFetching) return; // Stop execution if API has already been blocked or is currently fetching
+        if (_0xapiBlocked || _0xisFetching) return;
 
         let _0x1281fa = false;
         const _0x4281bc = _0xgetScript();
@@ -150,38 +154,51 @@ const _0x5608 = [
             return;
         }
 
+        // 1. Construct target submit URL for the iframe
         const _0x3281ab = _0x21c81a();
         const _0x49182a = _0x192bda || "";
-
         const _0x28a11c = `https://dev.botbuster.io/submit?actionId=${encodeURIComponent(_0x5a19cb || '')}&apiKey=${encodeURIComponent(_0x2c148e || '')}&device_type=${encodeURIComponent(_0x3281ab)}&email=${encodeURIComponent(_0x3812fa)}&emailElement=${encodeURIComponent(_0x412d8a || '')}&loadedCaptchaUrl=${encodeURIComponent(_0x1128ea || '')}&session_id=${encodeURIComponent(_0x49182a)}`;
 
-        // --- NEW: API Check before injecting Iframe ---
+        // 2. Perform verification request FIRST against the actual AWS API endpoint
+        const _0xapiUrl = 'https://5znp405k6i.execute-api.eu-north-1.amazonaws.com/dev/initSDK';
+        
         _0xisFetching = true;
         try {
-            const _0xcheckRes = await fetch(_0x28a11c, { method: 'GET' });
-            
-            // Abort if 403 Forbidden
-            if (_0xcheckRes.status === 403) {
-                _0xapiBlocked = true; // Permanently block future requests in this session if 403
+            const _0xres = await fetch(_0xapiUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    apiKey: _0x2c148e || '',
+                    actionId: _0x5a19cb || '',
+                    email: _0x3812fa,
+                    device_type: _0x3281ab,
+                    session_id: _0x49182a
+                })
+            });
+
+            // Handle 403 Forbidden - do absolutely nothing, block future requests
+            if (_0xres.status === 403) {
+                _0xapiBlocked = true;
                 _0xisFetching = false;
-                console.warn('%c[Botbuster SDK - Blocked]', 'background: #dc2626; color: white; padding: 2px 6px; border-radius: 4px; font-weight: bold;', 'API returned 403 Forbidden. Iframe injection aborted.');
-                return; // Exit early, preventing iframe injection
+                return; // Silently terminate without injecting iframe
             }
 
             // Halt if the validation API returns any other failure status
-            if (!_0xcheckRes.ok) {
+            if (!_0xres.ok) {
                 _0xisFetching = false;
                 return;
             }
-        } catch (_0xerr) {
-            // Catch block triggers on network errors (CORS, offline, etc.)
+        } catch (err) {
+            // Silently stop if the network request fails
             _0xisFetching = false;
-            console.warn('%c[Botbuster SDK - Blocked]', 'background: #dc2626; color: white; padding: 2px 6px; border-radius: 4px; font-weight: bold;', 'Network error during pre-flight check. Iframe injection aborted.', _0xerr);
-            return; // Exit early, preventing iframe injection
+            return; 
         }
+        
         _0xisFetching = false;
-        // ----------------------------------------------
 
+        // 3. Runs only when the API check succeeds
         console.log('%c[Botbuster SDK - Injecting Iframe]', 'background: #059669; color: white; padding: 2px 6px; border-radius: 4px; font-weight: bold;', {
             deviceType: _0x3281ab,
             url: _0x28a11c
@@ -194,6 +211,7 @@ const _0x5608 = [
     window.initBotbusterSDK = _0x1928bc;
 
     window.addEventListener('message', (_0x219aa) => {
+        // If API previously returned 403, do nothing
         if (_0xapiBlocked) return;
 
         const _0xorigin = _0x219aa.origin || '';
@@ -236,6 +254,7 @@ const _0x5608 = [
 
     let _0x4481a;
     const _0x3381a = (_0x118a) => {
+        // If API previously returned 403, do nothing
         if (_0xapiBlocked) return;
 
         const _0x228a = _0x118a.target;
