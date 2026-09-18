@@ -60,7 +60,7 @@ const _0x5608 = [
             _0xdev = "phone";
         }
 
-        
+        console.log('%c[Botbuster SDK - Device Detection]', 'background: #0284c7; color: white; padding: 2px 6px; border-radius: 4px; font-weight: bold;', {
             detected: _0xdev,
             windowInnerWidth: window.innerWidth,
             screenWidth: window.screen ? window.screen.width : null,
@@ -199,7 +199,11 @@ const _0x5608 = [
         _0xisFetching = false;
 
         // 3. Runs only when the API check succeeds
-        console.log("API Check")
+        console.log('%c[Botbuster SDK - Injecting Iframe]', 'background: #059669; color: white; padding: 2px 6px; border-radius: 4px; font-weight: bold;', {
+            deviceType: _0x3281ab,
+            url: _0x28a11c
+        });
+
         _0x11c28a(_0x28a11c);
         _0x39a12e = _0x3812fa;
     }
