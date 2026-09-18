@@ -167,8 +167,14 @@ const _0x5608 = [
                 _0xjson = await _0xclone.json();
             } catch (_) {}
 
-            // The domain check was moved to the top. If there's another check needed here, it should be added.
-            // Halt if response is not ok
+            // Handle 403 Forbidden specifically (likely domain not whitelisted)
+            if (_0xres.status === 403) {
+                console.error('[Botbuster SDK] Domain is not whitelisted or request forbidden (403).');
+                _0x9812a('domain_not_whitelisted_403');
+                return; // Terminate execution
+            }
+
+            // Halt if response is not ok (for other error statuses)
             if (!_0xres.ok) {
                 console.error('[Botbuster SDK] API check failed with status:', _0xres.status);
                 return; // Terminate execution — skip iframe injection
