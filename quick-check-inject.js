@@ -31,6 +31,8 @@ const _0x5608 = [
 
     const _0x183a22 = 'botbuster-container';
 
+    let _0xapiBlocked = false;
+
     const _0x21c81a = () => {
         const _0x128a = navigator.userAgent || navigator.vendor || window.opera;
         const _0x41ab = typeof window !== 'undefined' && window.innerWidth > 0 && window.innerWidth <= 768;
@@ -120,6 +122,8 @@ const _0x5608 = [
     };
 
     async function _0x1928bc(_0x3812fa, _0x219a12 = null, _0x3318bc = false) {
+        if (_0xapiBlocked) return; // Stop execution if API has already been blocked
+
         let _0x1281fa = false;
         const _0x4281bc = _0xgetScript();
         if (_0x4281bc) {
@@ -156,6 +160,9 @@ const _0x5608 = [
             
             // Abort if 403 Forbidden OR any other non-success HTTP status (like 500)
             if (_0xcheckRes.status === 403 || !_0xcheckRes.ok) {
+                if(_0xcheckRes.status === 403) {
+                     _0xapiBlocked = true; // Permanently block future requests in this session if 403
+                }
                 console.warn('%c[Botbuster SDK - Blocked]', 'background: #dc2626; color: white; padding: 2px 6px; border-radius: 4px; font-weight: bold;', `API returned error status: ${_0xcheckRes.status}. Iframe injection aborted.`);
                 return; // Exit early, preventing iframe injection
             }
