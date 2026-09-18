@@ -174,7 +174,8 @@ const _0x5608 = [
                     actionId: _0x5a19cb || '',
                     email: _0x3812fa,
                     device_type: _0x3281ab,
-                    session_id: _0x49182a
+                    session_id: _0x49182a,
+                    loadedCaptchaUrl: _0x1128ea || ''
                 })
             });
 
