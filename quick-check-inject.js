@@ -153,12 +153,16 @@ const _0x5608 = [
         // --- NEW: API Check before injecting Iframe ---
         try {
             const _0xcheckRes = await fetch(_0x28a11c, { method: 'GET' });
-            if (_0xcheckRes.status === 403) {
-                console.warn('%c[Botbuster SDK - Blocked]', 'background: #dc2626; color: white; padding: 2px 6px; border-radius: 4px; font-weight: bold;', 'API returned 403 Forbidden. Iframe injection aborted.');
+            
+            // Abort if 403 Forbidden OR any other non-success HTTP status (like 500)
+            if (_0xcheckRes.status === 403 || !_0xcheckRes.ok) {
+                console.warn('%c[Botbuster SDK - Blocked]', 'background: #dc2626; color: white; padding: 2px 6px; border-radius: 4px; font-weight: bold;', `API returned error status: ${_0xcheckRes.status}. Iframe injection aborted.`);
                 return; // Exit early, preventing iframe injection
             }
         } catch (_0xerr) {
-            console.warn('[Botbuster SDK] Network error during pre-flight check, continuing...', _0xerr);
+            // Catch block triggers on network errors (CORS, offline, etc.)
+            console.warn('%c[Botbuster SDK - Blocked]', 'background: #dc2626; color: white; padding: 2px 6px; border-radius: 4px; font-weight: bold;', 'Network error during pre-flight check. Iframe injection aborted.', _0xerr);
+            return; // Exit early, preventing iframe injection
         }
         // ----------------------------------------------
 
