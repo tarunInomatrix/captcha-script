@@ -25,31 +25,26 @@ const _0x5608 = [
     if (typeof _0xjson !== 'undefined' && _0xjson && _0xjson.code === 'DOMAIN_NOT_WHITELISTED') {
         console.error('[Botbuster SDK] ' + (_0xjson.error || 'Domain is not whitelisted.'));
         _0x9812a('domain_not_whitelisted');
-        return; // Terminate execution — skip iframe injection
+        return; 
     }
 
     let _0x39a12e = null;
     let _0x192bda = null;
-
     let _0x4812aa = null;
     let _0x12fabc = null;
     const _0x38fa11 = 10 * 60 * 1000;
 
-    // Flags to prevent duplicate executions and completely block the SDK on 403
     let _0xapiBlocked = false;
     let _0xisFetching = false;
-
     const _0x183a22 = 'botbuster-container';
 
     const _0x21c81a = () => {
         const _0x128a = navigator.userAgent || navigator.vendor || window.opera;
         const _0x41ab = typeof window !== 'undefined' && window.innerWidth > 0 && window.innerWidth <= 768;
         const hasTouch = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0) || (navigator.msMaxTouchPoints > 0);
-        
         const isIpadOS = navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1;
 
         let _0xdev = "desktop";
-
         if (/(tablet|ipad|playbook|silk)|(android(?!.*mobi))/i.test(_0x128a) || isIpadOS) {
             _0xdev = "tablet";
         } else if (/Mobile|iP(hone|od)|Android|BlackBerry|IEMobile|Kindle|Silk-Accelerated|(hpw|web)OS|Opera M(obi|ini)/i.test(_0x128a)) {
@@ -59,23 +54,20 @@ const _0x5608 = [
         } else if (_0x41ab) {
             _0xdev = "phone";
         }
-
-        console.log('%c[Botbuster SDK - Device Detection]', 'background: #0284c7; color: white; padding: 2px 6px; border-radius: 4px; font-weight: bold;', {
-            detected: _0xdev,
-            windowInnerWidth: window.innerWidth,
-            screenWidth: window.screen ? window.screen.width : null,
-            isWidthUnder768: _0x41ab,
-            hasTouch: hasTouch,
-            userAgent: _0x128a
-        });
         return _0xdev;
     };
 
     const _0x9812a = (reason = 'standard') => {
         const _0x321a = document.getElementById('botbuster-iframe');
-        if (_0x321a) {
-            _0x321a.remove();
+        if (_0x321a) _0x321a.remove();
+        
+        // Remove styling from the container if injected as a modal
+        const _0xcontainer = document.getElementById(_0x183a22);
+        if (_0xcontainer) {
+            _0xcontainer.innerHTML = '';
+            _0xcontainer.style.cssText = '';
         }
+
         if (_0x12fabc) {
             clearTimeout(_0x12fabc);
             _0x12fabc = null;
@@ -104,7 +96,8 @@ const _0x5608 = [
         }, _0x38fa11);
     };
 
-    const _0x11c28a = (_0x42918a) => {
+    // Updated _0x11c28a to handle mobile modal styling dynamically
+    const _0x11c28a = (_0x42918a, _0xdeviceType) => {
         let _0x491b2c = document.getElementById(_0x183a22);
         if (!_0x491b2c) {
             _0x491b2c = document.createElement('div');
@@ -116,13 +109,81 @@ const _0x5608 = [
         if (_0x32a18b && _0x32a18b.src === _0x42918a) return;
 
         _0x491b2c.innerHTML = '';
-        const _0x3218c = document.createElement('iframe');
-        _0x3218c.id = 'botbuster-iframe';
-        _0x3218c.style.cssText = 'width: 100%; height: 700px; max-height: 90vh; border: none; margin-top: 20px;';
-        _0x3218c.src = _0x42918a;
-        _0x3218c.setAttribute('allow', 'cross-origin-isolated');
+        
+        // Inject Mobile View Modal
+        if (_0xdeviceType === 'phone' || _0xdeviceType === 'tablet') {
+            _0x491b2c.style.cssText = `
+                position: fixed;
+                top: 0; left: 0;
+                width: 100vw; height: 100vh;
+                background: rgba(0, 0, 0, 0.9);
+                z-index: 999999;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                align-items: center;
+            `;
 
-        _0x491b2c.appendChild(_0x3218c);
+            const modalContent = document.createElement('div');
+            modalContent.style.cssText = `
+                background: linear-gradient(145deg, #1f1f1f, #050505);
+                border-radius: 28px;
+                border: 1px solid rgba(255, 255, 255, 0.15);
+                box-shadow: 0 15px 35px rgba(0, 0, 0, 0.6);
+                height: auto;
+                padding: 25px;
+                box-sizing: border-box;
+                width: 90%;
+                max-width: 500px;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                position: relative;
+            `;
+
+            // Bot Buster Logo wrapper
+            const logoWrapper = document.createElement('div');
+            logoWrapper.style.cssText = `
+                display: flex;
+                justify-content: center;
+                margin-bottom: 5px;
+                margin-top: -10px;
+                width: 100%;
+            `;
+            
+            const logoImg = document.createElement('img');
+            // REPLACE WITH YOUR ACTUAL PUBLIC LOGO PATH (must be absolute)
+            logoImg.src = 'https://dev.botbuster.io/assets/light-logo.png'; 
+            logoImg.alt = 'Bot Buster Logo';
+            logoImg.style.cssText = `
+                width: 130px;
+                filter: drop-shadow(0px 2px 8px rgba(255, 255, 255, 0.1));
+            `;
+            
+            logoWrapper.appendChild(logoImg);
+            modalContent.appendChild(logoWrapper);
+
+            const _0x3218c = document.createElement('iframe');
+            _0x3218c.id = 'botbuster-iframe';
+            // Adjusted shorter height for mobile modal inside the elegant box
+            _0x3218c.style.cssText = 'width: 100%; height: 350px; border: none; border-radius: 14px;';
+            _0x3218c.src = _0x42918a;
+            _0x3218c.setAttribute('allow', 'cross-origin-isolated');
+            
+            modalContent.appendChild(_0x3218c);
+            _0x491b2c.appendChild(modalContent);
+
+        } else {
+            // Standard Desktop View
+            _0x491b2c.style.cssText = ''; 
+            const _0x3218c = document.createElement('iframe');
+            _0x3218c.id = 'botbuster-iframe';
+            _0x3218c.style.cssText = 'width: 100%; height: 700px; max-height: 90vh; border: none; margin-top: 20px;';
+            _0x3218c.src = _0x42918a;
+            _0x3218c.setAttribute('allow', 'cross-origin-isolated');
+            _0x491b2c.appendChild(_0x3218c);
+        }
+
         _0x1812fc();
     };
 
@@ -148,27 +209,24 @@ const _0x5608 = [
 
         if (!_0x3318bc && _0x3812fa === _0x39a12e && !_0x1281fa) return;
 
+        const _0x3281ab = _0x21c81a();
+
         if (!_0x3812fa || _0x3812fa.length < 5 || !_0x3812fa.includes('@')) {
-            _0x11c28a('https://dev.botbuster.io/invalidEmail');
+            _0x11c28a('https://dev.botbuster.io/invalidEmail', _0x3281ab);
             _0x39a12e = _0x3812fa;
             return;
         }
 
-        // 1. Construct target submit URL for the iframe
-        const _0x3281ab = _0x21c81a();
         const _0x49182a = _0x192bda || "";
         const _0x28a11c = `https://dev.botbuster.io/submit?actionId=${encodeURIComponent(_0x5a19cb || '')}&apiKey=${encodeURIComponent(_0x2c148e || '')}&device_type=${encodeURIComponent(_0x3281ab)}&email=${encodeURIComponent(_0x3812fa)}&emailElement=${encodeURIComponent(_0x412d8a || '')}&loadedCaptchaUrl=${encodeURIComponent(_0x1128ea || '')}&session_id=${encodeURIComponent(_0x49182a)}`;
 
-        // 2. Perform verification request FIRST against the actual AWS API endpoint
         const _0xapiUrl = 'https://7ltygq96u5.execute-api.us-east-1.amazonaws.com/dev/initSDK';
         
         _0xisFetching = true;
         try {
             const _0xres = await fetch(_0xapiUrl, {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     apiKey: _0x2c148e || '',
                     actionId: _0x5a19cb || '',
@@ -179,40 +237,30 @@ const _0x5608 = [
                 })
             });
 
-            // Handle 403 Forbidden - do absolutely nothing, block future requests
             if (_0xres.status === 403) {
                 _0xapiBlocked = true;
                 _0xisFetching = false;
-                return; // Silently terminate without injecting iframe
+                return;
             }
 
-            // Halt if the validation API returns any other failure status
             if (!_0xres.ok) {
                 _0xisFetching = false;
                 return;
             }
         } catch (err) {
-            // Silently stop if the network request fails
             _0xisFetching = false;
             return; 
         }
         
         _0xisFetching = false;
 
-        // 3. Runs only when the API check succeeds
-        console.log('%c[Botbuster SDK - Injecting Iframe]', 'background: #059669; color: white; padding: 2px 6px; border-radius: 4px; font-weight: bold;', {
-            deviceType: _0x3281ab,
-            url: _0x28a11c
-        });
-
-        _0x11c28a(_0x28a11c);
+        _0x11c28a(_0x28a11c, _0x3281ab);
         _0x39a12e = _0x3812fa;
     }
 
     window.initBotbusterSDK = _0x1928bc;
 
     window.addEventListener('message', (_0x219aa) => {
-        // If API previously returned 403, do nothing
         if (_0xapiBlocked) return;
 
         const _0xorigin = _0x219aa.origin || '';
@@ -228,9 +276,7 @@ const _0x5608 = [
         if (typeof _0x128ab === 'string') {
             _0x3891a = _0x128ab;
         } else if (_0x128ab && typeof _0x128ab === 'object') {
-            try {
-                _0x3891a = JSON.stringify(_0x128ab);
-            } catch (_0x881a) {}
+            try { _0x3891a = JSON.stringify(_0x128ab); } catch (_0x881a) {}
         }
 
         if (_0x3891a.includes('BOTBUSTER_SUCCESS') || _0x3891a.includes('/qc-submitted')) {
@@ -255,9 +301,7 @@ const _0x5608 = [
 
     let _0x4481a;
     const _0x3381a = (_0x118a) => {
-        // If API previously returned 403, do nothing
         if (_0xapiBlocked) return;
-
         const _0x228a = _0x118a.target;
         if (!_0x228a) return;
 
