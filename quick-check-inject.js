@@ -61,7 +61,6 @@ const _0x5608 = [
         const _0x321a = document.getElementById('botbuster-iframe');
         if (_0x321a) _0x321a.remove();
         
-        // Remove styling from the container if injected as a modal
         const _0xcontainer = document.getElementById(_0x183a22);
         if (_0xcontainer) {
             _0xcontainer.innerHTML = '';
@@ -109,7 +108,6 @@ const _0x5608 = [
 
         _0x491b2c.innerHTML = '';
         
-        // Inject Mobile View Modal
         if (_0xdeviceType === 'phone' || _0xdeviceType === 'tablet') {
             _0x491b2c.style.cssText = `
                 position: fixed;
@@ -125,13 +123,6 @@ const _0x5608 = [
 
             const modalContent = document.createElement('div');
             modalContent.style.cssText = `
-                background: linear-gradient(145deg, #1f1f1f, #050505);
-                border-radius: 28px;
-                border: 1px solid rgba(255, 255, 255, 0.15);
-                box-shadow: 0 15px 35px rgba(0, 0, 0, 0.6);
-                height: auto;
-                padding: 25px;
-                box-sizing: border-box;
                 width: 90%;
                 max-width: 500px;
                 display: flex;
@@ -140,7 +131,6 @@ const _0x5608 = [
                 position: relative;
             `;
 
-            // Bot Buster Logo wrapper with Base64 inline image
             const logoWrapper = document.createElement('div');
             logoWrapper.style.cssText = `
                 display: flex;
@@ -151,10 +141,12 @@ const _0x5608 = [
             `;
             
             const logoImg = document.createElement('img');
-           
+          
             logoImg.alt = 'Bot Buster Logo';
+            // Added border-radius: 12px for rounded edges
             logoImg.style.cssText = `
                 width: 130px;
+                border-radius: 12px;
                 filter: drop-shadow(0px 2px 8px rgba(255, 255, 255, 0.1));
             `;
             
@@ -163,7 +155,6 @@ const _0x5608 = [
 
             const _0x3218c = document.createElement('iframe');
             _0x3218c.id = 'botbuster-iframe';
-            // Increased height to 480px and added overflow:hidden to fully display canvas and instructions
             _0x3218c.style.cssText = 'width: 100%; height: 480px; border: none; border-radius: 14px; overflow: hidden;';
             _0x3218c.src = _0x42918a;
             _0x3218c.setAttribute('allow', 'cross-origin-isolated');
@@ -172,7 +163,6 @@ const _0x5608 = [
             _0x491b2c.appendChild(modalContent);
 
         } else {
-            // Standard Desktop View
             _0x491b2c.style.cssText = ''; 
             const _0x3218c = document.createElement('iframe');
             _0x3218c.id = 'botbuster-iframe';
