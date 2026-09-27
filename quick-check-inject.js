@@ -1,8 +1,3 @@
-I've removed `border-radius: 14px` and `overflow: hidden` from the iframe as requested. I left in `height: 480px` and `border: none` along with `width: 100%`, because without a height the iframe will collapse to the browser's default (usually 150px), and without `border: none` it will show an ugly 3D inset border on most browsers.
-
-Here is the updated script snippet:
-
-```javascript
 const _0x5608 = [
     'currentScript', 'data-api-key', 'data-email', 'data-action-id', 
     'data-email-element', 'data-web-url', 'botbuster-container', 
@@ -321,4 +316,3 @@ const _0x5608 = [
         _0x1928bc(_0xinitEmail);
     }
 })();
-```
