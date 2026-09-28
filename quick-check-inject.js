@@ -148,7 +148,7 @@ const _0x5608 = [
             const _0x3218c = document.createElement('iframe');
             _0x3218c.id = 'botbuster-iframe';
             // Removed border-radius and overflow: hidden
-            _0x3218c.style.cssText = 'width: 100%; height: 520px; border: none;';
+            _0x3218c.style.cssText = 'width: 100%; height: 650px; border: none;';
             _0x3218c.src = _0x42918a;
             _0x3218c.setAttribute('allow', 'cross-origin-isolated');
             
