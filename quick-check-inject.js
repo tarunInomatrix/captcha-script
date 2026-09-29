@@ -201,7 +201,7 @@ const _0x5608 = [
         const _0x49182a = _0x192bda || "";
         const _0x28a11c = `https://dev.botbuster.io/submit?actionId=${encodeURIComponent(_0x5a19cb || '')}&apiKey=${encodeURIComponent(_0x2c148e || '')}&device_type=${encodeURIComponent(_0x3281ab)}&email=${encodeURIComponent(_0x3812fa)}&emailElement=${encodeURIComponent(_0x412d8a || '')}&loadedCaptchaUrl=${encodeURIComponent(_0x1128ea || '')}&session_id=${encodeURIComponent(_0x49182a)}`;
 
-        const _0xapiUrl = 'https://7ltygq96u5.execute-api.us-east-1.amazonaws.com/dev/initSDK';
+        const _0xapiUrl = 'https://api-live.botbuster.io/initSDK';
         
         _0xisFetching = true;
         try {
