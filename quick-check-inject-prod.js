@@ -28,8 +28,8 @@ const _0x5608 = [
         return; 
     }
 
-    let _0x39a12e = null;
-    let _0x192bda = null;
+    let _0x39a12e = null; // email
+    let _0x192bda = null; // session_id
     let _0x4812aa = null;
     let _0x12fabc = null;
     const _0x38fa11 = 10 * 60 * 1000;
@@ -140,14 +140,10 @@ const _0x5608 = [
                 width: 100%;
             `;
             
-            
-            
-            
             modalContent.appendChild(logoWrapper);
 
             const _0x3218c = document.createElement('iframe');
             _0x3218c.id = 'botbuster-iframe';
-            // Removed border-radius and overflow: hidden
             _0x3218c.style.cssText = 'width: 100%; height: 650px; border: none;';
             _0x3218c.src = _0x42918a;
             _0x3218c.setAttribute('allow', 'cross-origin-isolated');
@@ -273,8 +269,17 @@ const _0x5608 = [
                 const _0x221a = _0x4891a.get('email');
                 const _0x331a = _0x4891a.get('session_id');
 
-                if (_0x221a && (_0x221a !== _0x39a12e || (_0x331a && _0x331a !== _0x192bda))) {
-                    _0x1928bc(_0x221a, _0x331a, true);
+                if (_0x221a) {
+                    // FIX: If this is the FIRST session_id sync and email hasn't changed, sync silently.
+                    if (_0x221a === _0x39a12e && _0x192bda === null && _0x331a) {
+                        if (!_0x331a.startsWith('QC-')) {
+                            _0x192bda = _0x331a;
+                        }
+                    } 
+                    // Otherwise, trigger the fetch if email changed OR an existing session_id changed
+                    else if (_0x221a !== _0x39a12e || (_0x331a && _0x331a !== _0x192bda)) {
+                        _0x1928bc(_0x221a, _0x331a, true);
+                    }
                 }
             } catch (_0x771a) {}
         }
